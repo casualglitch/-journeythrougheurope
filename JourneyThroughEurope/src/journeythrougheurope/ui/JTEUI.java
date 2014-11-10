@@ -1,0 +1,922 @@
+package JTE.ui;
+
+import application.Main;
+import application.Main.JTEPropertyType;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import javax.swing.JEditorPane;
+import javax.swing.text.Document;
+import javax.swing.text.html.HTMLDocument;
+
+import journeythrougheurope.file.JTEFileLoader;
+import journeythrougheurope.game.JTEGameData;
+import journeythrougheurope.game.JTEGameStateManager;
+import application.Main.JTEPropertyType;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
+import javafx.animation.AnimationTimer;
+import properties_manager.PropertiesManager;
+import java.lang.Thread;
+import java.util.Stack;
+import javafx.embed.swing.SwingNode;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.effect.BlendMode;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
+import javax.sound.sampled.AudioSystem;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.plaf.basic.BasicTableUI.KeyHandler;
+
+public class JTEUI extends Pane {
+
+    /**
+     * The JTEUIState represents the four screen states that are possible
+     * for the JourneyThroughEurope game application. Depending on which state is in current
+     * use, different controls will be visible.
+     */
+    public enum JTEUIState {
+
+        SPLASH_SCREEN_STATE, PLAY_GAME_STATE, VIEW_STATS_STATE, VIEW_ABOUT_STATE,
+        VIEW_FLIGHT_STATE,
+    }
+
+    // mainStage
+    private Stage primaryStage;
+
+    // mainPane
+    private BorderPane mainPane;
+    private BorderPane hmPane;
+
+    // SplashScreen
+    private ImageView splashScreenImageView;
+    private StackPane splashScreenPane;
+    private Label splashScreenImageLabel;
+    private HBox levelSelectionPane;
+    private ArrayList<Button> levelButtons;
+    private Media audio;
+
+    // NorthToolBar
+    private HBox northToolbar;
+    private Button backButton;
+    private Button statsButton;
+    private Button undoButton;
+    private Button timeButton;
+    private Label time = new Label();
+    private Integer startTime = 0;
+
+    // GamePane
+    private Label JTELabel;
+    private Button newGameButton;
+    private HBox letterButtonsPane;
+    private HashMap<Character, Button> letterButtons;
+    private BorderPane gamePanel = new BorderPane();
+    private GraphicsContext gc;
+    private GridRenderer gr;
+    Stack<int[][]> undo = new Stack<int[][]>();
+
+    // images
+    final Image wallImage = new Image("file:images/wall.png");
+    final Image boxImage = new Image("file:images/box.png");
+    final Image placeImage = new Image("file:images/place.png");
+    final Image JTEImage = new Image("file:images/JTE.png");
+
+    //StatsPane
+    private ScrollPane statsScrollPane;
+    private JEditorPane statsPane;
+
+    //HelpPane
+    private BorderPane helpPanel;
+    private JScrollPane helpScrollPane;
+    private JEditorPane helpPane;
+    private Button homeButton;
+    private Pane workspace;
+
+    // Padding
+    private Insets marginlessInsets;
+
+    // Image path
+    private String ImgPath = "file:images/";
+    String currentLevel = "";
+
+    // mainPane weight && height
+    private int paneWidth;
+    private int paneHeigth;
+
+    // THIS CLASS WILL HANDLE ALL ACTION EVENTS FOR THIS PROGRAM
+    private JTEEventHandler eventHandler;
+    private JTEErrorHandler errorHandler;
+    private JTEDocumentManager docManager;
+
+    JTEGameStateManager gsm;
+
+    public JTEUI() {
+        gsm = new JTEGameStateManager(this);
+        eventHandler = new JTEEventHandler(this);
+        errorHandler = new JTEErrorHandler(primaryStage);
+        docManager = new JTEDocumentManager(this);
+        initMainPane();
+        initSplashScreen();
+    }
+
+    public void SetStage(Stage stage) {
+        primaryStage = stage;
+    }
+
+    public BorderPane GetMainPane() {
+        return this.mainPane;
+    }
+
+    public JTEGameStateManager getGSM() {
+        return gsm;
+    }
+
+    public JTEDocumentManager getDocManager() {
+        return docManager;
+    }
+
+    public JTEErrorHandler getErrorHandler() {
+        return errorHandler;
+    }
+
+    public JEditorPane getHelpPane() {
+        return helpPane;
+    }
+
+    public void initMainPane() {
+        marginlessInsets = new Insets(5, 5, 5, 5);
+        mainPane = new BorderPane();
+
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        paneWidth = Integer.parseInt(props
+                .getProperty(JTEPropertyType.WINDOW_WIDTH));
+        paneHeigth = Integer.parseInt(props
+                .getProperty(JTEPropertyType.WINDOW_HEIGHT));
+        mainPane.resize(paneWidth, paneHeigth);
+        mainPane.setPadding(marginlessInsets);
+    }
+
+    public void initSplashScreen() {
+        // INIT THE SPLASH SCREEN CONTROLS
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        String splashScreenImagePath = props
+                .getProperty(JTEPropertyType.SPLASH_SCREEN_IMAGE_NAME);
+        props.addProperty(JTEPropertyType.INSETS, "5");
+        String str = props.getProperty(JTEPropertyType.INSETS);
+
+        //splashScreenPane = new FlowPane();
+        splashScreenPane = new StackPane();
+
+        Image splashScreenImage = loadImage(splashScreenImagePath);
+        splashScreenImageView = new ImageView(splashScreenImage);
+
+        splashScreenImageLabel = new Label();
+        splashScreenImageLabel.setGraphic(splashScreenImageView);
+        // move the label position to fix the pane
+        splashScreenImageLabel.setLayoutX(-45);
+        splashScreenPane.getChildren().add(splashScreenImageLabel);
+
+        // GET THE LIST OF LEVEL OPTIONS
+        ArrayList<String> levels = props
+                .getPropertyOptionsList(JTEPropertyType.LEVEL_OPTIONS);
+        ArrayList<String> levelImages = props
+                .getPropertyOptionsList(JTEPropertyType.LEVEL_IMAGE_NAMES);
+        //ArrayList<String> levelFiles = props
+        //        .getPropertyOptionsList(JTEPropertyType.LEVEL_FILES);
+
+        //levelSelectionPane = new HBox();
+        //levelSelectionPane.setSpacing(10.0);
+        //levelSelectionPane.setAlignment(Pos.CENTER);
+        GridPane grid = new GridPane();
+        grid.setHgap(3.0);
+        grid.setAlignment(Pos.CENTER);
+        // add key listener
+        levelButtons = new ArrayList<Button>();
+        for (int i = 0; i < levels.size(); i++) {
+
+            // GET THE LIST OF LEVEL OPTIONS
+            String level = levels.get(i);
+            String levelImageName = levelImages.get(i);
+            Image levelImage = loadImage(levelImageName);
+            ImageView levelImageView = new ImageView(levelImage);
+
+            // AND BUILD THE BUTTON
+            Button levelButton = new Button();
+            levelButton.setGraphic(levelImageView);
+
+            // CONNECT THE BUTTON TO THE EVENT HANDLER
+            levelButton.setOnAction(new EventHandler<ActionEvent>() {
+
+                @Override
+                public void handle(ActionEvent event) {
+                    // TODO
+                    //eventHandler.respondToSelectLevelRequest(level);
+                    eventHandler.respondToNewGameRequest(level);
+                    currentLevel = level;
+                }
+            });
+            Text label = new Text("LEVEL " + (i + 1));
+            label.setFont(Font.font("Tahoma", FontWeight.BOLD, 39));
+            // TODO
+            //levelSelectionPane.getChildren().add(levelButton);
+            // TODO: enable only the first level
+            //levelButton.setDisable(true);
+            if (i >= 5) {
+                grid.add(levelButton, i - 5, 3);
+                grid.add(label, i - 5, 2);
+            } else {
+                grid.add(levelButton, i, 1);
+                grid.add(label, i, 0);
+            }
+        }
+        splashScreenPane.getChildren().add(grid);
+        splashScreenPane.setLayoutY(-200);
+        mainPane.setCenter(splashScreenPane);
+        //mainPane.setBottom(levelSelectionPane);
+        //audio = new Media("http://www.123rf.com/audio_27651314_light-instrumental-music-with-keyboards-funk-guitar-bass-and-drum-bright-melody-loops-of-various-key.html");
+        //playAudio();
+    }
+
+    /**
+     * This method initializes the language-specific game controls, which
+     * includes the three primary game screens.
+     */
+    public void initJTEUI() {
+        // FIRST REMOVE THE SPLASH SCREEN
+        //mainPane.getChildren().clear();
+        mainPane.setCenter(null);
+
+        // GET THE UPDATED TITLE
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        String title = props.getProperty(JTEPropertyType.GAME_TITLE_TEXT);
+        primaryStage.setTitle(title);
+
+        // THEN ADD ALL THE STUFF WE MIGHT NOW USE
+        initNorthToolbar();
+
+        // OUR WORKSPACE WILL STORE EITHER THE GAME, STATS,
+        // OR HELP UI AT ANY ONE TIME
+        initWorkspace();
+        //initGameScreen();
+        //initStatsPane();
+        //initHelpPane();
+
+        // WE'LL START OUT WITH THE GAME SCREEN
+        changeWorkspace(JTEUIState.PLAY_GAME_STATE);
+
+    }
+
+    /**
+     * This function initializes all the controls that go in the north toolbar.
+     */
+    private void initNorthToolbar() {
+        // MAKE THE NORTH TOOLBAR, WHICH WILL HAVE FOUR BUTTONS
+        northToolbar = new HBox();
+        northToolbar.setStyle("-fx-background-color:lightgray");
+        northToolbar.setAlignment(Pos.CENTER);
+        northToolbar.setPadding(marginlessInsets);
+        //northToolbar.setSpacing(10.0);
+
+        // MAKE AND INIT THE BACK BUTTON
+        backButton = initToolbarButton(northToolbar,
+                JTEPropertyType.BACK_IMG_NAME);
+        //setTooltip(backButton, JTEPropertyType.GAME_TOOLTIP);
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                // TODO Auto-generated method stub
+                eventHandler
+                        .respondToSwitchScreenRequest(JTEUIState.SPLASH_SCREEN_STATE);
+            }
+        });
+
+        // MAKE AND INIT THE UNDO BUTTON
+        undoButton = initToolbarButton(northToolbar,
+                JTEPropertyType.UNDO_IMG_NAME);
+        //setTooltip(undoButton, JTEPropertyType.HELP_TOOLTIP);
+        undoButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                // TODO Auto-generated method stub
+                eventHandler
+                        .respondToSwitchScreenRequest(JTEUIState.VIEW_HELP_STATE);
+            }
+
+        });
+
+        // MAKE AND INIT THE STATS BUTTON
+        statsButton = initToolbarButton(northToolbar,
+                JTEPropertyType.STATS_IMG_NAME);
+        //setTooltip(statsButton, JTEPropertyType.STATS_TOOLTIP);
+
+        statsButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                // TODO Auto-generated method stub
+                eventHandler
+                        .respondToSwitchScreenRequest(JTEUIState.VIEW_STATS_STATE);
+            }
+
+        });
+
+        // MAKE AND INIT THE TIME BUTTON
+        timeButton = initToolbarButton(northToolbar,
+                JTEPropertyType.TIME_IMG_NAME);
+        //setTooltip(timeButton, JTEPropertyType.EXIT_TOOLTIP);
+        timeButton.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                // TODO Auto-generated method stub
+                //eventHandler.respondToExitRequest(primaryStage);
+            }
+
+        });
+
+        // AND NOW PUT THE NORTH TOOLBAR IN THE FRAME
+        mainPane.setTop(northToolbar);
+        //mainPane.getChildren().add(northToolbar);
+    }
+
+    /**
+     * This method helps to initialize buttons for a simple toolbar.
+     *
+     * @param toolbar The toolbar for which to add the button.
+     *
+     * @param prop The property for the button we are building. This will
+     * dictate which image to use for the button.
+     *
+     * @return A constructed button initialized and added to the toolbar.
+     */
+    private Button initToolbarButton(HBox toolbar, JTEPropertyType prop) {
+        // GET THE NAME OF THE IMAGE, WE DO THIS BECAUSE THE
+        // IMAGES WILL BE NAMED DIFFERENT THINGS FOR DIFFERENT LANGUAGES
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        String imageName = props.getProperty(prop);
+
+        // LOAD THE IMAGE
+        Image image = loadImage(imageName);
+        ImageView imageIcon = new ImageView(image);
+
+        // MAKE THE BUTTON
+        Button button = new Button();
+        button.setGraphic(imageIcon);
+        button.setPadding(marginlessInsets);
+
+        // PUT IT IN THE TOOLBAR
+        toolbar.getChildren().add(button);
+
+        // AND SEND BACK THE BUTTON
+        return button;
+    }
+
+    /**
+     * The workspace is a panel that will show different screens depending on
+     * the user's requests.
+     */
+    private void initWorkspace() {
+        // THE WORKSPACE WILL GO IN THE CENTER OF THE WINDOW, UNDER THE NORTH
+        // TOOLBAR
+        workspace = new Pane();
+        mainPane.setCenter(workspace);
+        //mainPane.getChildren().add(workspace);
+        //System.out.println("in the initWorkspace");
+    }
+
+    public Image loadImage(String imageName) {
+        Image img = new Image(ImgPath + imageName);
+        return img;
+    }
+
+    /**
+     * This function selects the UI screen to display based on the uiScreen
+     * argument. Note that we have 3 such screens: game, stats, and help.
+     *
+     * @param uiScreen The screen to be switched to.
+     */
+    public void changeWorkspace(JTEUIState uiScreen) {
+        switch (uiScreen) {
+            case SPLASH_SCREEN_STATE:
+                mainPane.getChildren().clear();
+                while (undo.isEmpty() == false) {
+                    undo.pop();
+                }
+                initSplashScreen();
+                break;
+            case VIEW_HELP_STATE:
+                undo();
+                break;
+            case PLAY_GAME_STATE:
+                initGameScreen();
+                mainPane.setCenter(gamePanel); // or renderer??
+                break;
+            case VIEW_STATS_STATE:
+                //TODO
+                //mainPane.setCenter(statsScrollPane);
+                break;
+            default:
+        }
+    }
+
+    public void initGameScreen() {
+        gr = new GridRenderer();
+        gamePanel.setCenter(gr);
+        workspace.getChildren().add(gamePanel);
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        gr.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent me1) {
+                // FIGURE OUT THE CORRESPONDING COLUMN & ROW
+                double w = gr.getWidth() / gr.gridColumns;
+                double col = me1.getX() / w;
+                double h = gr.getHeight() / gr.gridRows;
+                double row = me1.getY() / h;
+                // GET THE VALUE IN THAT CELL
+                int value1 = gr.grid[(int) col][(int) row];
+                if (value1 == JTE) {
+                    gr.setOnMouseClicked((MouseEvent me2) -> {
+                        double w2 = gr.getWidth() / gr.gridColumns;
+                        double col2 = me2.getX() / w2;
+                        double h2 = gr.getHeight() / gr.gridRows;
+                        double row2 = me2.getY() / h2;
+                        //2nd value=up
+                        if (value1 == gr.grid[(int) col2][(int) row2 + 1]) {
+                            moveUp();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = down
+                        else if (value1 == gr.grid[(int) col2][(int) row2 - 1]) {
+                            moveDown();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = left
+                        else if (value1 == gr.grid[(int) col2 + 1][(int) row2]) {
+                            moveLeft();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = right
+                        else if (value1 == gr.grid[(int) col2 - 1][(int) row2]) {
+                            moveRight();
+                            me1.consume();
+                            me2.consume();
+                        }
+                    });
+                }
+            }
+        });
+        gr.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent me1) {
+                // FIGURE OUT THE CORRESPONDING COLUMN & ROW
+                double w = gr.getWidth() / gr.gridColumns;
+                double col = me1.getX() / w;
+                double h = gr.getHeight() / gr.gridRows;
+                double row = me1.getY() / h;
+                // GET THE VALUE IN THAT CELL
+                int value1 = gr.grid[(int) col][(int) row];
+                if (value1 == JTE) { //JTE
+                    gr.setOnMouseReleased((MouseEvent me2) -> {
+                        double w2 = gr.getWidth() / gr.gridColumns;
+                        double col2 = me2.getX() / w2;
+                        double h2 = gr.getHeight() / gr.gridRows;
+                        double row2 = me2.getY() / h2;
+                        //2nd value=up
+                        if (value1 == gr.grid[(int) col2][(int) row2 + 1]) {
+                            moveUp();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = down
+                        else if (value1 == gr.grid[(int) col2][(int) row2 - 1]) {
+                            moveDown();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = left
+                        else if (value1 == gr.grid[(int) col2 + 1][(int) row2]) {
+                            moveLeft();
+                            me1.consume();
+                            me2.consume();
+                        } //2nd value = right
+                        else if (value1 == gr.grid[(int) col2 - 1][(int) row2]) {
+                            moveRight();
+                            me1.consume();
+                            me2.consume();
+                        }
+                    });
+                }
+            }
+        });
+        //movement by arrow keys
+        mainPane.setOnKeyPressed(new EventHandler<KeyEvent>() {
+            @Override
+            public void handle(KeyEvent ke) {
+                if (ke.getCode() == KeyCode.UP) {
+                    moveUp();
+                }
+                if (ke.getCode() == KeyCode.DOWN) {
+                    moveDown();
+                }
+                if (ke.getCode() == KeyCode.LEFT) {
+                    moveLeft();
+                }
+                if (ke.getCode() == KeyCode.RIGHT) {
+                    moveRight();
+                }
+                if (ke.getCode() == KeyCode.U) {
+                    undo();
+                }
+                if (isWin()) {
+                    playAudio(yay);
+                    eventHandler.respondToWin(primaryStage);
+                    while (undo.empty() == false) {
+                        undo.pop();
+                    }
+                }
+                if (isLose()) {
+                    //System.out.println("lose");
+                    //playAudio(lose);
+                    //eventHandler.respondToLose(primaryStage);
+                }
+            }
+        });
+    }
+
+    public GridRenderer getGrid() {
+        return gr;
+    }
+
+    /**
+     * This class renders the grid for us. Note that we also listen for mouse
+     * clicks and key presses on it.
+     */
+    class GridRenderer extends Canvas {
+
+        // PIXEL DIMENSIONS OF EACH CELL
+        int cellWidth;
+        int cellHeight;
+        int gridColumns = 10;
+        int gridRows = 10;
+        int[][] grid;
+
+        /**
+         * Default constructor.
+         */
+        public GridRenderer() {
+            this.setWidth(650);
+            this.setHeight(650);
+            grid = new int[gridColumns][gridRows];
+            repaint();
+        }
+
+        public void repaint() {
+            gc = this.getGraphicsContext2D();
+            gc.clearRect(0, 0, this.getWidth(), this.getHeight());
+
+            // CALCULATE THE GRID CELL DIMENSIONS
+            int w = (int) (this.getWidth() / gridColumns);
+            int h = (int) (this.getHeight() / gridRows);
+
+            gc = this.getGraphicsContext2D();
+
+            // NOW RENDER EACH CELL
+            int x = 0, y = 0;
+            for (int i = 0; i < gridColumns; i++) {
+                y = 0;
+                for (int j = 0; j < gridRows; j++) {
+                    // DRAW THE CELL
+                    gc.setFill(Color.WHITE);
+                    switch (grid[i][j]) {
+                        case 0:
+                            gc.fillRect(x, y, w, h);
+                            break;
+                        case 1:
+                            gc.drawImage(wallImage, x, y, w, h);
+                            break;
+                        case 2:
+                            gc.drawImage(boxImage, x, y, w, h);
+                            break;
+                        case 3:
+                            gc.drawImage(placeImage, x, y, w, h);
+                            break;
+                        case 4:
+                            gc.drawImage(JTEImage, x, y, w, h);
+                            break;
+                    }
+
+                    double xInc = (w / 2) - (10 / 2);
+                    double yInc = (h / 2) + (10 / 4);
+                    x += xInc;
+                    y += yInc;
+                    x -= xInc;
+                    y -= yInc;
+
+                    // ON TO THE NEXT ROW
+                    y += h;
+                }
+                // ON TO THE NEXT COLUMN
+                x += w;
+            }
+        }
+    }
+
+    public void undo() {
+        if (undo.isEmpty() == false) {
+            System.out.println("u");
+            gr.grid = undo.pop();
+            gr.repaint();
+        }
+    }
+
+    public void moveUp() {
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        int[][] grid = new int[gr.gridColumns][gr.gridRows];//newgrid
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                grid[i][j] = gr.grid[i][j];
+            }
+        }
+        System.out.println("up");
+        outerloop:
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == JTE) {
+                    switch (gr.grid[i][j - 1]) {
+                        case 0: //empty, move up
+                            undo.push(grid);
+                            gr.grid[i][j - 1] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = empty; //then, soko = blank
+                            break outerloop;
+                        case 1: //wall
+                            playAudio(block);
+                            break outerloop; //don't move
+                        case 2: //box, move soko up & move box up
+                            if (gr.grid[i][j - 2] == hole || gr.grid[i][j - 2] == empty) { //2 spaces beyond avail
+                                undo.push(grid);
+                                gr.grid[i][j - 2] = gr.grid[i][j - 1]; //two ahead is box  
+                                gr.grid[i][j - 1] = JTE; //box is soko
+                                gr.grid[i][j] = empty; //soko is empty or hole???
+                            } else if (gr.grid[i][j - 2] == box || gr.grid[i][j - 2] == wall) { //2 spaces is a box OR wall
+                                playAudio(block);
+                            }
+                            break outerloop;
+                        case 3: //hole, move up
+                            undo.push(grid);
+                            gr.grid[i][j - 1] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = hole; //then, soko = hole
+                            break outerloop;
+                    }
+                }
+            }
+        }
+        gr.repaint();
+    }
+
+    public void moveDown() {
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        int[][] grid = new int[gr.gridColumns][gr.gridRows];//newgrid
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                grid[i][j] = gr.grid[i][j];
+            }
+        }
+        System.out.println("down");
+        outerloop:
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == JTE) {
+                    switch (gr.grid[i][j + 1]) {
+                        case 0: //empty, move up
+                            undo.push(grid);
+                            gr.grid[i][j + 1] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = empty; //then, soko = blank
+                            break outerloop;
+                        case 1: //wall
+                            playAudio(block);
+                            break outerloop; //don't move
+                        case 2: //box, move soko up & move box up
+                            if (gr.grid[i][j + 2] == hole || gr.grid[i][j + 2] == empty) { //2 spaces beyond avail
+                                undo.push(grid);
+                                gr.grid[i][j + 2] = gr.grid[i][j + 1]; //two ahead is box  
+                                gr.grid[i][j + 1] = JTE; //box is soko
+                                gr.grid[i][j] = empty; //soko is empty or hole???
+                            } else if (gr.grid[i][j + 2] == box || gr.grid[i][j + 2] == wall) { //2 spaces is a box OR wall
+                                playAudio(block);
+                            }
+                            break outerloop;
+                        case 3: //hole, move up
+                            undo.push(grid);
+                            gr.grid[i][j + 1] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = hole; //then, soko = hole
+                            break outerloop;
+                    }
+                }
+            }
+        }
+        gr.repaint();
+    }
+
+    public void moveLeft() {
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        int[][] grid = new int[gr.gridColumns][gr.gridRows];//newgrid
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                grid[i][j] = gr.grid[i][j];
+            }
+        }
+        System.out.println("left");
+        outerloop:
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == JTE) {
+                    switch (gr.grid[i - 1][j]) {
+                        case 0: //empty, move up
+                            undo.push(grid);
+                            gr.grid[i - 1][j] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = empty; //then, soko = blank
+                            break outerloop;
+                        case 1: //wall
+                            playAudio(block);
+                            break outerloop; //don't move
+                        case 2: //box, move soko up & move box up
+                            if (gr.grid[i - 2][j] == hole || gr.grid[i - 2][j] == empty) { //2 spaces beyond avail
+                                undo.push(grid);//gr.grid[i-2][j] <= box & gr.grid[i-1][j] <= soko
+                                gr.grid[i - 2][j] = gr.grid[i - 1][j]; //two ahead is box  
+                                gr.grid[i - 1][j] = JTE; //box is soko
+                                gr.grid[i][j] = empty; //soko is empty or hole???
+                            } else if (gr.grid[i - 2][j] == box || gr.grid[i - 2][j] == wall) { //2 spaces is a box OR wall
+                                playAudio(block);
+                            }
+                            break outerloop;
+                        case 3: //hole, move up
+                            undo.push(grid);
+                            gr.grid[i - 1][j] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = hole; //then, soko = hole
+                            break outerloop;
+                    }
+                }
+            }
+        }
+        gr.repaint();
+    }
+
+    public void moveRight() {
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        int[][] grid = new int[gr.gridColumns][gr.gridRows];//newgrid
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                grid[i][j] = gr.grid[i][j];
+            }
+        }
+        System.out.println("right");
+        outerloop:
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == JTE) {
+                    switch (gr.grid[i + 1][j]) {
+                        case 0: //empty, move up
+                            undo.push(grid);
+                            gr.grid[i + 1][j] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = empty; //then, soko = blank
+                            break outerloop;
+                        case 1: //wall
+                            playAudio(block);
+                            break outerloop; //don't move
+                        case 2: //box, move soko up & move box up
+                            if (gr.grid[i + 2][j] == hole || gr.grid[i + 2][j] == empty) { //2 spaces beyond avail
+                                undo.push(grid);//gr.grid[i-2][j] <= box & gr.grid[i-1][j] <= soko
+
+                                gr.grid[i + 2][j] = gr.grid[i + 1][j]; //two ahead is box  
+                                gr.grid[i + 1][j] = JTE; //box is soko
+                                gr.grid[i][j] = empty; //soko is empty or hole???
+                            } else if (gr.grid[i + 2][j] == box || gr.grid[i + 2][j] == wall) { //2 spaces is a box OR wall
+                                playAudio(block);
+                            }
+                            break outerloop;
+                        case 3: //hole, move up
+                            undo.push(grid);
+                            gr.grid[i + 1][j] = JTE; //space up replaced by soko
+                            gr.grid[i][j] = hole; //then, soko = hole
+                            break outerloop;
+                    }
+                }
+            }
+        }
+        gr.repaint();
+    }
+
+    public boolean isWin() {
+        int holes = 0;
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == hole) {
+                    holes++;
+                }
+            }
+        }
+        return holes == 0;
+    }
+
+    public boolean isLose() {
+        int holes = 0, boxes = 0;
+        int wall1 = 6, wall2 = 6;
+        int JTE = 4, wall = 1, box = 2, hole = 3, empty = 0;
+        for (int i = 0; i < gr.gridColumns; i++) {
+            for (int j = 0; j < gr.gridRows; j++) {
+                if (gr.grid[i][j] == hole) {
+                    holes++;
+                }
+                else if (gr.grid[i][j] == box) {
+                    //box beyond and one side
+                    if (gr.grid[i - 1][j] == wall || gr.grid[i - 1][j] == box) {
+                        wall1 = gr.grid[i - 1][j];
+                        if (gr.grid[i + 1][j] == wall || gr.grid[i + 1][j] == box) {
+                            wall2 = gr.grid[i + 1][j];
+                        } else if (gr.grid[i][j - 1] == wall || gr.grid[i][j - 1] == box) {
+                            wall2 = gr.grid[i][j - 1];
+                        } else if (gr.grid[i][j + 1] == wall || gr.grid[i][j + 1] == box) {
+                            wall2 = gr.grid[i][j + 1];
+                        }
+                    } else if (gr.grid[i + 1][j] == wall || gr.grid[i + 1][j] == box) {
+                        wall1 = gr.grid[i + 1][j];
+                        if (gr.grid[i - 1][j] == wall || gr.grid[i - 1][j] == box) {
+                            wall2 = gr.grid[i - 1][j];
+                        } else if (gr.grid[i][j - 1] == wall || gr.grid[i][j - 1] == box) {
+                            wall2 = gr.grid[i][j - 1];
+                        } else if (gr.grid[i][j + 1] == wall || gr.grid[i][j + 1] == box) {
+                            wall2 = gr.grid[i][j + 1];
+                        }
+                    } else if (gr.grid[i][j - 1] == wall || gr.grid[i][j - 1] == box ) {
+                        wall1 = gr.grid[i][j - 1];
+                        if (gr.grid[i - 1][j] == wall || gr.grid[i-1][j] == box) {
+                            wall2 = gr.grid[i - 1][j];
+                        } else if (gr.grid[i + 1][j] == wall || gr.grid[i+1][j] == box) {
+                            wall2 = gr.grid[i + 1][j];
+                        } else if (gr.grid[i][j + 1] == wall || gr.grid[i][j + 1] == box) {
+                            wall2 = gr.grid[i][j + 1];
+                        }
+                    } else if (gr.grid[i][j + 1] == wall || gr.grid[i][j + 1] == box) {
+                        wall1 = gr.grid[i][j + 1];
+                        if (gr.grid[i - 1][j] == wall || gr.grid[i - 1][j] == box ) {
+                            wall2 = gr.grid[i - 1][j];
+                        } else if (gr.grid[i][j - 1] == wall || gr.grid[i][j-1] == box) {
+                            wall2 = gr.grid[i][j - 1];
+                        } else if (gr.grid[i + 1][j] == wall || gr.grid[i][j+1] == box) {
+                            wall2 = gr.grid[i + 1][j];
+                        }
+                    }
+                }
+                if (wall1 == 1 && wall2 == 1) {
+                    boxes++;
+                }
+            }
+        }
+        return isWin() == false && wall1 == 1 && wall2 == 1 && holes > boxes;
+    }
+
+    final Media block = new Media(new File("audio/block.wav").toURI().toString());
+    final Media yay = new Media(new File("audio/yay.wav").toURI().toString());
+    final Media lose = new Media(new File("audio/lose.wav").toURI().toString());
+    public void playAudio(Media media) {
+        MediaPlayer audio = new MediaPlayer(media);
+        audio.play();
+    }
+}
