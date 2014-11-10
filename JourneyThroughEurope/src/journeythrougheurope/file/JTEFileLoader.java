@@ -5,10 +5,16 @@
  */
 package journeythrougheurope.file;
 
+import journeythrougheurope.ui.JTEUI;
+
 /**
  *
  * @author Husky
  */
 public class JTEFileLoader {
+
+    public JTEFileLoader(JTEUI ui) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

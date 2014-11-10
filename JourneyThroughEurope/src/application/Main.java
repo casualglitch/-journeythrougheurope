@@ -18,20 +18,20 @@ public class Main extends Application {
     public void start(Stage primaryStage) {
         try {
             PropertiesManager props = PropertiesManager.getPropertiesManager();
-            props.addProperty(SokobanPropertyType.UI_PROPERTIES_FILE_NAME,
+            props.addProperty(JTEPropertyType.UI_PROPERTIES_FILE_NAME,
                     UI_PROPERTIES_FILE_NAME);
-            props.addProperty(SokobanPropertyType.PROPERTIES_SCHEMA_FILE_NAME,
+            props.addProperty(JTEPropertyType.PROPERTIES_SCHEMA_FILE_NAME,
                     PROPERTIES_SCHEMA_FILE_NAME);
-            props.addProperty(SokobanPropertyType.DATA_PATH.toString(),
+            props.addProperty(JTEPropertyType.DATA_PATH.toString(),
                     DATA_PATH);
             props.loadProperties(UI_PROPERTIES_FILE_NAME,
                     PROPERTIES_SCHEMA_FILE_NAME);
 
             // GET THE LOADED TITLE AND SET IT IN THE FRAME
-            String title = props.getProperty(SokobanPropertyType.SPLASH_SCREEN_TITLE_TEXT);
+            String title = props.getProperty(JTEPropertyType.SPLASH_SCREEN_TITLE_TEXT);
             primaryStage.setTitle(title);
 
-            SokobanUI root = new SokobanUI();
+            JTEUI root = new JTEUI();
             BorderPane mainPane = root.GetMainPane();
             root.SetStage(primaryStage);
 
@@ -47,7 +47,7 @@ public class Main extends Application {
         launch(args);
     }
 
-    public enum SokobanPropertyType {
+    public enum JTEPropertyType {
         /* SETUP FILE NAMES */
 
         UI_PROPERTIES_FILE_NAME, PROPERTIES_SCHEMA_FILE_NAME,
@@ -56,11 +56,11 @@ public class Main extends Application {
         /* WINDOW DIMENSIONS */
         WINDOW_WIDTH, WINDOW_HEIGHT,
         /* LEVEL OPTIONS PROPERTIES */
-        LEVEL_OPTIONS, LEVEL_FILES, LEVEL_IMAGE_NAMES,
+        MENU_OPTIONS, GAME_DATA_FILES, MENU_IMAGE_NAMES,
         /* GAME TEXT */
         SPLASH_SCREEN_TITLE_TEXT, GAME_TITLE_TEXT, GAME_SUBHEADER_TEXT, WIN_DISPLAY_TEXT, LOSE_DISPLAY_TEXT, GAME_RESULTS_TEXT, GUESS_LABEL, LETTER_OPTIONS, EXIT_REQUEST_TEXT, YES_TEXT, NO_TEXT, DEFAULT_YES_TEXT, DEFAULT_NO_TEXT, DEFAULT_EXIT_TEXT,
         /* IMAGE FILE NAMES */
-        WINDOW_ICON, SPLASH_SCREEN_IMAGE_NAME, BACK_IMG_NAME, UNDO_IMG_NAME, STATS_IMG_NAME, TIME_IMG_NAME, //HELP_IMG_NAME, EXIT_IMG_NAME, NEW_GAME_IMG_NAME, HOME_IMG_NAME,
+        WINDOW_ICON, SPLASH_SCREEN_IMAGE_NAME, SPLASH_GAME_IMAGE_NAME, BACK_IMG_NAME, UNDO_IMG_NAME, STATS_IMG_NAME, TIME_IMG_NAME, //HELP_IMG_NAME, EXIT_IMG_NAME, NEW_GAME_IMG_NAME, HOME_IMG_NAME,
         /* DATA FILE STUFF */
         GAME_FILE_NAME, STATS_FILE_NAME, HELP_FILE_NAME, WORD_LIST_FILE_NAME,
         /* TOOLTIPS */

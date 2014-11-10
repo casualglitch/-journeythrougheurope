@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    The properties in this file are loaded when the JourneyToEurope game application
+    first loads.
+-->
+<properties>
+    <property_list>
+        <property name="SPLASH_SCREEN_TITLE_TEXT"   value="JourneyThroughEurope"></property>
+        <property name="WINDOW_WIDTH"               value="1000"></property>
+        <property name="WINDOW_HEIGHT"              value="600"></property>
+        <property name="SPLASH_SCREEN_IMAGE_NAME"   value="splash.gif"></property>
+        <property name="SPLASH_GAME_IMAGE_NAME"   	value="Game.jpg"></property>
+        <property name="DATA_PATH"                  value="./data/"></property>
+        <property name="IMG_PATH"                   value="./images/"></property>
+        <property name="LETTERS_FONT_FAMILY"        value="monospaced"></property>
+        <property name="LETTERS_FONT_SIZE"          value="24"></property>
+        <property name="DEFAULT_YES_TEXT"           value="Yes"></property>
+        <property name="DEFAULT_NO_TEXT"            value="No"></property>
+        <property name="DEFAULT_EXIT_TEXT"          value="Are you sure you wish to Quit?"></property>
+		   
+    	<!-- THESE ARE THE GUI IMAGES -->
+    	<property name="START_IMG_NAME"          value="start.png"></property>
+    	<property name="ABOUT_IMG_NAME"          value="about.png"></property>    
+   		<property name="LOAD_IMG_NAME"           value="load.png"></property> 
+   		<property name="QUIT_IMG_NAME"           value="quit.png"></property>
+   		
+   		<!-- DATA FILES TO LOAD -->
+        <property name="CARD_LIST_FILE_NAME"    value="Cards.txt"></property>
+        <property name="CITY_LIST_FILE_NAME"    value="Cities.txt"></property>
+   		
+    </property_list>
+    <property_options_list>
+        <property_options name="MENU_OPTIONS">
+            <option>Start</option>
+            <option>Load</option>
+            <option>About</option>
+            <option>Quit</option>
+        </property_options>
+        <property_options name="MENU_IMAGE_NAMES">
+            <option>start.png</option>
+            <option>load.png</option>
+            <option>about.png</option>
+            <option>quit.png</option>
+        </property_options>
+        <property_options name="GAME_DATA_FILES">
+            <option>Cards.txt</option>
+            <option>Cities.txt</option>
+        </property_options>
+    </property_options_list>
+</properties>
