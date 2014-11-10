@@ -17,6 +17,7 @@ import journeythrougheurope.game.JTEGameData;
 import journeythrougheurope.game.JTEGameStateManager;
 import application.Main.JTEPropertyType;
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Panel;
 import java.awt.event.ActionListener;
@@ -46,7 +47,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
@@ -72,10 +76,13 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javax.sound.sampled.AudioSystem;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.plaf.basic.BasicTableUI.KeyHandler;
 
@@ -125,12 +132,12 @@ public class JTEUI extends Pane {
     // SetupPane
     private GridPane playerPane  = new GridPane();
     private BorderPane setupPane = new BorderPane();
-    private FlowPane pane1 = new FlowPane();
-    private FlowPane pane2 = new FlowPane();
-    private FlowPane pane3 = new FlowPane();
-    private FlowPane pane4 = new FlowPane();
-    private FlowPane pane5 = new FlowPane();
-    private FlowPane pane6 = new FlowPane();
+    private BorderPane pane1 = new BorderPane();
+    private BorderPane pane2 = new BorderPane();
+    private BorderPane pane3 = new BorderPane();
+    private BorderPane pane4 = new BorderPane();
+    private BorderPane pane5 = new BorderPane();
+    private BorderPane pane6 = new BorderPane();
     
 
     // GamePane
@@ -522,51 +529,180 @@ public class JTEUI extends Pane {
         final Image blackflag = new Image("file:images/flag_black.png");
         Label flag1 = new Label();
         flag1.setGraphic(new ImageView(blackflag));
-        pane1.getChildren().add(flag1);
-        
+        pane1.setLeft(flag1);
+        pane1.setMargin(flag1, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg1 = new ToggleGroup();
+        RadioButton playerRB1 = new RadioButton("Player");
+        RadioButton compRB1 = new RadioButton("Computer");
+        playerRB1.setToggleGroup(tg1);
+        compRB1.setToggleGroup(tg1);
+        playerRB1.setSelected(true);
+        VBox rb1 = new VBox();
+        rb1.getChildren().add(playerRB1);
+        rb1.getChildren().add(compRB1);
+        pane1.setCenter(rb1);
+        pane1.setMargin(rb1, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane1 = new VBox();
+        Label name1 = new Label("Name:");
+        namePane1.getChildren().add(name1);
+        TextField text1 = new TextField("Player1");
+        namePane1.getChildren().add(text1);
+        pane1.setRight(namePane1);
+        pane1.setMargin(namePane1, new Insets(110,10,0,0));
+        //2
         final Image yellowflag = new Image("file:images/flag_yellow.png");
         Label flag2 = new Label();
         flag2.setGraphic(new ImageView(yellowflag));
-        pane2.getChildren().add(flag2);
-        
+        pane2.setLeft(flag2);
+        pane2.setMargin(flag2, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg2 = new ToggleGroup();
+        RadioButton playerRB2 = new RadioButton("Player");
+        RadioButton compRB2 = new RadioButton("Computer");
+        playerRB2.setToggleGroup(tg2);
+        compRB2.setToggleGroup(tg2);
+        compRB2.setSelected(true);
+        VBox rb2 = new VBox();
+        rb2.getChildren().add(playerRB2);
+        rb2.getChildren().add(compRB2);
+        pane2.setCenter(rb2);
+        pane2.setMargin(rb2, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane2 = new VBox();
+        Label name2 = new Label("Name:");
+        namePane2.getChildren().add(name2);
+        TextField text2 = new TextField("Player2");
+        namePane2.getChildren().add(text2);
+        pane2.setRight(namePane2);
+        pane2.setMargin(namePane2, new Insets(110,10,0,0));
+        //3
         final Image blueflag = new Image("file:images/flag_blue.png");
         Label flag3 = new Label();
         flag3.setGraphic(new ImageView(blueflag));
-        pane3.getChildren().add(flag1);
-        
+        pane3.setLeft(flag3);
+        pane3.setMargin(flag3, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg3 = new ToggleGroup();
+        RadioButton playerRB3 = new RadioButton("Player");
+        RadioButton compRB3 = new RadioButton("Computer");
+        playerRB3.setToggleGroup(tg3);
+        compRB3.setToggleGroup(tg3);
+        compRB3.setSelected(true);
+        VBox rb3 = new VBox();
+        rb3.getChildren().add(playerRB3);
+        rb3.getChildren().add(compRB3);
+        pane3.setCenter(rb3);
+        pane3.setMargin(rb3, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane3 = new VBox();
+        Label name3 = new Label("Name:");
+        namePane3.getChildren().add(name3);
+        TextField text3 = new TextField("Player3");
+        namePane3.getChildren().add(text3);
+        pane3.setRight(namePane3);
+        pane3.setMargin(namePane3, new Insets(110,10,0,0));
+        //4
         final Image redflag = new Image("file:images/flag_red.png");
         Label flag4 = new Label();
         flag4.setGraphic(new ImageView(redflag));
-        pane4.getChildren().add(flag1);
-        
+        pane4.setLeft(flag4);
+        pane4.setMargin(flag4, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg4 = new ToggleGroup();
+        RadioButton playerRB4 = new RadioButton("Player");
+        RadioButton compRB4 = new RadioButton("Computer");
+        playerRB4.setToggleGroup(tg4);
+        compRB4.setToggleGroup(tg4);
+        compRB4.setSelected(true);
+        VBox rb4 = new VBox();
+        rb4.getChildren().add(playerRB4);
+        rb4.getChildren().add(compRB4);
+        pane4.setCenter(rb4);
+        pane4.setMargin(rb4, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane4 = new VBox();
+        Label name4 = new Label("Name:");
+        namePane4.getChildren().add(name4);
+        TextField text4 = new TextField("Player4");
+        namePane4.getChildren().add(text4);
+        pane4.setRight(namePane4);
+        pane4.setMargin(namePane4, new Insets(110,10,0,0));
+        //5
         final Image greenflag = new Image("file:images/flag_green.png");
         Label flag5 = new Label();
         flag5.setGraphic(new ImageView(greenflag));
-        pane5.getChildren().add(flag1);
-        
+        pane5.setLeft(flag5);
+        pane5.setMargin(flag5, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg5 = new ToggleGroup();
+        RadioButton playerRB5 = new RadioButton("Player");
+        RadioButton compRB5 = new RadioButton("Computer");
+        playerRB5.setToggleGroup(tg5);
+        compRB5.setToggleGroup(tg5);
+        compRB5.setSelected(true);
+        VBox rb5 = new VBox();
+        rb5.getChildren().add(playerRB5);
+        rb5.getChildren().add(compRB5);
+        pane5.setCenter(rb5);
+        pane5.setMargin(rb5, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane5 = new VBox();
+        Label name5 = new Label("Name:");
+        namePane5.getChildren().add(name5);
+        TextField text5 = new TextField("Player5");
+        namePane5.getChildren().add(text5);
+        pane5.setRight(namePane5);
+        pane5.setMargin(namePane5, new Insets(110,10,0,0));
+        //6
         final Image whiteflag = new Image("file:images/flag_white.png");
         Label flag6 = new Label();
         flag6.setGraphic(new ImageView(whiteflag));
-        pane6.getChildren().add(flag1);
+        pane6.setLeft(flag6);
+        pane6.setMargin(flag6, new Insets(100,0,0,0));
+        //radiobutton group
+        ToggleGroup tg6 = new ToggleGroup();
+        RadioButton playerRB6 = new RadioButton("Player");
+        RadioButton compRB6 = new RadioButton("Computer");
+        playerRB6.setToggleGroup(tg6);
+        compRB6.setToggleGroup(tg6);
+        compRB6.setSelected(true);
+        VBox rb6 = new VBox();
+        rb6.getChildren().add(playerRB6);
+        rb6.getChildren().add(compRB6);
+        pane6.setCenter(rb6);
+        pane6.setMargin(rb6, new Insets(110,0,0,0));
+        //name/textfield Pane
+        VBox namePane6 = new VBox();
+        Label name6 = new Label("Name:");
+        namePane6.getChildren().add(name6);
+        TextField text6 = new TextField("Player6");
+        namePane6.getChildren().add(text6);
+        pane6.setRight(namePane6);
+        pane6.setMargin(namePane6, new Insets(110,10,0,0));
         
         
         //show 6 player pane
-        for (int i=0; i<2; i++) {
-            playerPane.getColumnConstraints().add(new ColumnConstraints(330));
-            playerPane.getRowConstraints().add(new RowConstraints(180));
+        for (int c=0; c<3; c++) {
+            playerPane.getColumnConstraints().add(new ColumnConstraints(310));
+        }
+        for (int r=0; r<2; r++) {
+                playerPane.getRowConstraints().add(new RowConstraints(260));
         }
        
         playerPane.setAlignment(Pos.CENTER);
         playerPane.add(pane1, 0, 0);
         playerPane.add(pane2, 1, 0);
-        //playerPane.add(pane3, 2, 0);
-        //playerPane.add(pane4, 0, 1);
-        //playerPane.add(pane5, 1, 1);
-        //playerPane.add(pane6, 2, 1);
+        playerPane.add(pane3, 2, 0);
+        playerPane.add(pane4, 0, 1);
+        playerPane.add(pane5, 1, 1);
+        playerPane.add(pane6, 2, 1);
       //  playerPane.setMargin(pane1, new Insets(5, 10, 5, 10));
         playerPane.setGridLinesVisible(true);
         setupPane.setCenter(playerPane);
-        workspace.getChildren().add(setupPane);
+        mainPane.setCenter(setupPane);
+        //workspace.getChildren().add(setupPane);
     }
 
     public void setupPlayerGrid(String num) {
