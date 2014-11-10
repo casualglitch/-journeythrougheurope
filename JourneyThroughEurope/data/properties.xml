@@ -27,6 +27,11 @@
    		<!-- DATA FILES TO LOAD -->
         <property name="CARD_LIST_FILE_NAME"    value="Cards.txt"></property>
         <property name="CITY_LIST_FILE_NAME"    value="Cities.txt"></property>
+        <property name="ABOUT_FILE_NAME"         value="About.html"></property>
+        
+        <property name="WORD_LIST_FILE_NAME"    value="EN_FiveLetterWordsList.txt"></property>
+        <property name="GAME_FILE_NAME"         value="EN_GameDisplay.html"></property>
+        <property name="STATS_FILE_NAME"        value="EN_StatsDisplay.html"></property>
    		
     </property_list>
     <property_options_list>

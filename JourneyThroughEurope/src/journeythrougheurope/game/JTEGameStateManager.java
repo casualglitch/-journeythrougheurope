@@ -13,13 +13,7 @@ public class JTEGameStateManager {
     public enum JTEGameState {
 
         GAME_NOT_STARTED, GAME_IN_PROGRESS, GAME_OVER,
-        LEVEL1,
-        LEVEL2,
-        LEVEL3,
-        LEVEL4,
-        LEVEL5,
-        LEVEL6,
-        LEVEL7
+        SPLASH, ABOUT, HISTORY, FLIGHT, GAMEPLAY
     }
 
     // STORES THE CURRENT STATE OF THIS GAME

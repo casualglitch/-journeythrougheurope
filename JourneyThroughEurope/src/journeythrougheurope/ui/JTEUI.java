@@ -17,6 +17,8 @@ import journeythrougheurope.game.JTEGameData;
 import journeythrougheurope.game.JTEGameStateManager;
 import application.Main.JTEPropertyType;
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.Panel;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
@@ -25,9 +27,14 @@ import java.util.TimerTask;
 import javafx.animation.AnimationTimer;
 import properties_manager.PropertiesManager;
 import java.lang.Thread;
+import java.net.MalformedURLException;
 import java.util.Stack;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingNode;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -36,6 +43,8 @@ import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
@@ -48,14 +57,14 @@ import javafx.scene.input.MouseEvent;
 
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -63,11 +72,15 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
 import javax.sound.sampled.AudioSystem;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.plaf.basic.BasicTableUI.KeyHandler;
 
 public class JTEUI extends Pane {
+
     /**
      * The JTEUIState represents the four screen states that are possible for
      * the JourneyThroughEurope game application. Depending on which state is in
@@ -76,6 +89,7 @@ public class JTEUI extends Pane {
     public enum JTEUIState {
 
         SPLASH_SCREEN_STATE,
+        SETUP_SCREEN_STATE,
         PLAY_GAME_STATE,
         VIEW_HISTORY_STATE,
         VIEW_ABOUT_STATE,
@@ -91,7 +105,7 @@ public class JTEUI extends Pane {
     // mainPane weight && height
     private int paneWidth;
     private int paneHeigth;
-    
+
     // SplashScreen
     private ImageView splashScreenImageView;
     private StackPane splashScreenPane;
@@ -108,21 +122,28 @@ public class JTEUI extends Pane {
     private Button aboutButton;
     private Button saveButton;
 
+    // SetupPane
+    private GridPane playerPane  = new GridPane();
+    private BorderPane setupPane = new BorderPane();
+    private FlowPane pane1 = new FlowPane();
+    private FlowPane pane2 = new FlowPane();
+    private FlowPane pane3 = new FlowPane();
+    private FlowPane pane4 = new FlowPane();
+    private FlowPane pane5 = new FlowPane();
+    private FlowPane pane6 = new FlowPane();
+    
+
     // GamePane
     private Label JTELabel;
-    private Button newGameButton;
-    private HBox letterButtonsPane;
-    private HashMap<Character, Button> letterButtons;
     private BorderPane gamePanel = new BorderPane();
     private GraphicsContext gc;
-    Stack<int[][]> undo = new Stack<int[][]>();
 
     // Image path
     private String ImgPath = "file:images/";
-    
+
     // images
     final Image JTEImage = new Image("file:images/JTE.png");
-   // final Image splashImage = new Image("file:images/splash.gif");
+    // final Image splashImage = new Image("file:images/splash.gif");
     final Image gameImage = new Image("file:images/Game.jpg");
 
     //HistoryPane
@@ -130,24 +151,23 @@ public class JTEUI extends Pane {
     private JEditorPane historyPane;
 
     //AboutPane
-    private BorderPane aboutPanel;
-    private JScrollPane aboutScrollPane;
+    private StackPane aboutPanel;
+    private ScrollPane aboutScrollPane;
     private JEditorPane aboutPane;
-    private Button homeButton;
     private Pane workspace;
 
     // Padding
     private Insets marginlessInsets;
-
 
     // THIS CLASS WILL HANDLE ALL ACTION EVENTS FOR THIS PROGRAM
     private JTEEventHandler eventHandler;
     private JTEGameStateManager gsm;
     private JTEFileLoader fileLoader;
 
-    
     // ANIMATION
     double AnimaLength = 0.5;
+
+    private JTEUIState currentUIState; 
     
     public class Position {
 
@@ -171,6 +191,7 @@ public class JTEUI extends Pane {
     public JTEUI() throws IOException {
         gsm = new JTEGameStateManager(this);
         eventHandler = new JTEEventHandler(this);
+        currentUIState = JTEUIState.SPLASH_SCREEN_STATE;
         //errorHandler = new JTEErrorHandler(primaryStage);
         //docManager = new JTEDocumentManager(this);
         initMainPane();
@@ -192,6 +213,11 @@ public class JTEUI extends Pane {
     //public JTEDocumentManager getDocManager() {
     //    return docManager;
     //}
+    
+    public JTEUIState getCurrentUIState() {
+        return currentUIState;
+    }
+    
     public JEditorPane getAboutPane() {
         return aboutPane;
     }
@@ -218,7 +244,7 @@ public class JTEUI extends Pane {
                 .getProperty(JTEPropertyType.SPLASH_GAME_IMAGE_NAME);
         props.addProperty(JTEPropertyType.INSETS, "5");
         String str = props.getProperty(JTEPropertyType.INSETS);
-        
+
         splashScreenPane = new StackPane();
         //background splash screen image
         Image splashScreenImage = loadImage(splashScreenImagePath);
@@ -230,7 +256,7 @@ public class JTEUI extends Pane {
         //overlay splash game image
         Image splashGameImage = loadImage(splashGameImagePath);
         splashGameImageView = new ImageView(splashGameImage);
-        
+
         splashGameImageLabel = new Label();
         splashGameImageLabel.setGraphic(splashGameImageView);
         // move the label position to fix the pane
@@ -242,13 +268,13 @@ public class JTEUI extends Pane {
                 .getPropertyOptionsList(JTEPropertyType.MENU_OPTIONS);
         ArrayList<String> menuImages = props
                 .getPropertyOptionsList(JTEPropertyType.MENU_IMAGE_NAMES);
-        
+
         menuPane = new VBox();
         menuPane.setAlignment(Pos.CENTER);
         menuButtons = new ArrayList<Button>();
         for (int i = 0; i < menu.size(); i++) {
 
-            // GET THE LIST OF LANGUAGE OPTIONS
+            // GET THE LIST OF MENU OPTIONS
             String option = menu.get(i);
             String optionImageName = menuImages.get(i);
             Image optionImage = loadImage(optionImageName);
@@ -263,12 +289,14 @@ public class JTEUI extends Pane {
 
                 @Override
                 public void handle(ActionEvent event) {
-                    try {
-                        // TODO Auto-generated method stub
-                        // System.out.println(lang);
-                        eventHandler.respondToSelectMenu(option);
-                    } catch (IOException ex) {
-                        Logger.getLogger(JTEUI.class.getName()).log(Level.SEVERE, null, ex);
+                    if (option.equals("Quit")) {
+                        eventHandler.respondToExitRequest(primaryStage);
+                    } else if (option.equals("Start")) {
+                        eventHandler.respondToStartGameRequest();
+                    } else if (option.equals("load")) {
+                        eventHandler.respondToLoadGameRequest();
+                    } else if (option.equals("About")) {
+                        eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_ABOUT_STATE);
                     }
                 }
             });
@@ -276,15 +304,17 @@ public class JTEUI extends Pane {
             menuPane.getChildren().add(optionButton);
         }
         splashScreenPane.getChildren().add(menuPane);
-        
+        splashScreenPane.setMargin(menuPane, new Insets(300, 0, 0, 0));
+        System.out.println("in the initSplashScreenPane");
         mainPane.setCenter(splashScreenPane);
+        currentUIState = JTEUIState.SPLASH_SCREEN_STATE;
     }
 
     /**
      * This method initializes the language-specific game controls, which
      * includes the three primary game screens.
      */
-    public void initJTEUI() throws IOException {
+    public void initJTEUI(){
         // FIRST REMOVE THE SPLASH SCREEN
         //mainPane.getChildren().clear();
         mainPane.setCenter(null);
@@ -295,93 +325,93 @@ public class JTEUI extends Pane {
         primaryStage.setTitle(title);
 
         // THEN ADD ALL THE STUFF WE MIGHT NOW USE
-        initNorthToolbar();
+        initEastToolbar();
 
         // OUR WORKSPACE WILL STORE EITHER THE GAME, STATS,
         // OR HELP UI AT ANY ONE TIME
         initWorkspace();
-        //initGameScreen();
-        //initStatsPane();
-        //initHelpPane();
+        initSetupScreen();
+        initGameScreen();
+        initHistoryPane();
+        initAboutPane();
 
         // WE'LL START OUT WITH THE GAME SCREEN
-        changeWorkspace(JTEUIState.PLAY_GAME_STATE);
-
+        //changeWorkspace(JTEUIState.PLAY_GAME_STATE);
     }
 
     /**
      * This function initializes all the controls that go in the north toolbar.
      */
-    private void initNorthToolbar() {
+    private void initEastToolbar() {
         /*// MAKE THE NORTH TOOLBAR, WHICH WILL HAVE FOUR BUTTONS
-        northToolbar = new HBox();
-        northToolbar.setStyle("-fx-background-color:lightgray");
-        northToolbar.setAlignment(Pos.CENTER);
-        northToolbar.setPadding(marginlessInsets);
-        //northToolbar.setSpacing(10.0);
+         northToolbar = new HBox();
+         northToolbar.setStyle("-fx-background-color:lightgray");
+         northToolbar.setAlignment(Pos.CENTER);
+         northToolbar.setPadding(marginlessInsets);
+         //northToolbar.setSpacing(10.0);
 
-        // MAKE AND INIT THE BACK BUTTON
-        backButton = initToolbarButton(northToolbar,
-                JTEPropertyType.BACK_IMG_NAME);
-        //setTooltip(backButton, JTEPropertyType.GAME_TOOLTIP);
-        backButton.setOnAction(new EventHandler<ActionEvent>() {
+         // MAKE AND INIT THE BACK BUTTON
+         backButton = initToolbarButton(northToolbar,
+         JTEPropertyType.BACK_IMG_NAME);
+         //setTooltip(backButton, JTEPropertyType.GAME_TOOLTIP);
+         backButton.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override
-            public void handle(ActionEvent event) {
-                // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(JTEUIState.SPLASH_SCREEN_STATE);
-            }
-        });
+         @Override
+         public void handle(ActionEvent event) {
+         // TODO Auto-generated method stub
+         eventHandler
+         .respondToSwitchScreenRequest(JTEUIState.SPLASH_SCREEN_STATE);
+         }
+         });
 
-        // MAKE AND INIT THE UNDO BUTTON
-        undoButton = initToolbarButton(northToolbar,
-                JTEPropertyType.UNDO_IMG_NAME);
-        //setTooltip(undoButton, JTEPropertyType.HELP_TOOLTIP);
-        undoButton.setOnAction(new EventHandler<ActionEvent>() {
+         // MAKE AND INIT THE UNDO BUTTON
+         undoButton = initToolbarButton(northToolbar,
+         JTEPropertyType.UNDO_IMG_NAME);
+         //setTooltip(undoButton, JTEPropertyType.HELP_TOOLTIP);
+         undoButton.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override
-            public void handle(ActionEvent event) {
-                // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(JTEUIState.VIEW_ABOUT_STATE);
-            }
+         @Override
+         public void handle(ActionEvent event) {
+         // TODO Auto-generated method stub
+         eventHandler
+         .respondToSwitchScreenRequest(JTEUIState.VIEW_ABOUT_STATE);
+         }
 
-        });
+         });
 
-        // MAKE AND INIT THE STATS BUTTON
-        statsButton = initToolbarButton(northToolbar,
-                JTEPropertyType.STATS_IMG_NAME);
-        //setTooltip(statsButton, JTEPropertyType.STATS_TOOLTIP);
+         // MAKE AND INIT THE STATS BUTTON
+         statsButton = initToolbarButton(northToolbar,
+         JTEPropertyType.STATS_IMG_NAME);
+         //setTooltip(statsButton, JTEPropertyType.STATS_TOOLTIP);
 
-        statsButton.setOnAction(new EventHandler<ActionEvent>() {
+         statsButton.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override
-            public void handle(ActionEvent event) {
-                // TODO Auto-generated method stub
-                eventHandler
-                        .respondToSwitchScreenRequest(JTEUIState.VIEW_HISTORY_STATE);
-            }
+         @Override
+         public void handle(ActionEvent event) {
+         // TODO Auto-generated method stub
+         eventHandler
+         .respondToSwitchScreenRequest(JTEUIState.VIEW_HISTORY_STATE);
+         }
 
-        });
+         });
 
-        // MAKE AND INIT THE TIME BUTTON
-        timeButton = initToolbarButton(northToolbar,
-                JTEPropertyType.TIME_IMG_NAME);
-        //setTooltip(timeButton, JTEPropertyType.EXIT_TOOLTIP);
-        timeButton.setOnAction(new EventHandler<ActionEvent>() {
+         // MAKE AND INIT THE TIME BUTTON
+         timeButton = initToolbarButton(northToolbar,
+         JTEPropertyType.TIME_IMG_NAME);
+         //setTooltip(timeButton, JTEPropertyType.EXIT_TOOLTIP);
+         timeButton.setOnAction(new EventHandler<ActionEvent>() {
 
-            @Override
-            public void handle(ActionEvent event) {
-                // TODO Auto-generated method stub
-                //eventHandler.respondToExitRequest(primaryStage);
-            }
+         @Override
+         public void handle(ActionEvent event) {
+         // TODO Auto-generated method stub
+         //eventHandler.respondToExitRequest(primaryStage);
+         }
 
-        });
+         });
 
-        // AND NOW PUT THE NORTH TOOLBAR IN THE FRAME
-        mainPane.setTop(northToolbar);
-        //mainPane.getChildren().add(northToolbar);*/
+         // AND NOW PUT THE NORTH TOOLBAR IN THE FRAME
+         mainPane.setTop(northToolbar);
+         //mainPane.getChildren().add(northToolbar);*/
     }
 
     /**
@@ -394,7 +424,7 @@ public class JTEUI extends Pane {
      *
      * @return A constructed button initialized and added to the toolbar.
      */
-    private Button initToolbarButton(HBox toolbar, JTEPropertyType prop) {
+    private Button initToolbarButton(VBox toolbar, JTEPropertyType prop) {
         // GET THE NAME OF THE IMAGE, WE DO THIS BECAUSE THE
         // IMAGES WILL BE NAMED DIFFERENT THINGS FOR DIFFERENT LANGUAGES
         PropertiesManager props = PropertiesManager.getPropertiesManager();
@@ -421,12 +451,8 @@ public class JTEUI extends Pane {
      * the user's requests.
      */
     private void initWorkspace() {
-        // THE WORKSPACE WILL GO IN THE CENTER OF THE WINDOW, UNDER THE NORTH
-        // TOOLBAR
         workspace = new Pane();
         mainPane.setCenter(workspace);
-        //mainPane.getChildren().add(workspace);
-        //System.out.println("in the initWorkspace");
     }
 
     public Image loadImage(String imageName) {
@@ -440,32 +466,238 @@ public class JTEUI extends Pane {
      *
      * @param uiScreen The screen to be switched to.
      */
-    public void changeWorkspace(JTEUIState uiScreen) throws IOException {
+    public void changeWorkspace(JTEUIState uiScreen) {
         switch (uiScreen) {
             case SPLASH_SCREEN_STATE:
-                mainPane.getChildren().clear();
-                while (undo.isEmpty() == false) {
-                    undo.pop();
-                }
-                initSplashScreen();
+                mainPane.setCenter(splashScreenPane);
                 break;
-            case VIEW_ABOUT_STATE:
-                //TODO
+            case SETUP_SCREEN_STATE:
+                mainPane.setCenter(setupPane);
                 break;
             case PLAY_GAME_STATE:
-                initGameScreen();
-                mainPane.setCenter(gamePanel); // or renderer??
+                mainPane.setCenter(gamePanel);
+                break;
+            case VIEW_ABOUT_STATE:
+                initAboutPane();
+                mainPane.setCenter(aboutPanel);
                 break;
             case VIEW_HISTORY_STATE:
-                //TODO
-                //mainPane.setCenter(statsScrollPane);
+                mainPane.setCenter(historyScrollPane);
+                break;
+            case VIEW_FLIGHT_STATE:
                 break;
             default:
         }
     }
 
-    public void initGameScreen() {
+    public void initSetupScreen() {
+        FlowPane selectPane = new FlowPane();
+        selectPane.setHgap(5);
+        setupPane.setStyle("-fx-background-color:burlywood");
+        String[] nums = new String[] {"2", "3", "4", "5", "6"};
+        ComboBox<String> cb = new ComboBox<>();
+        cb.setValue("6");
+        ObservableList<String> items = FXCollections.observableArrayList(nums);
+        cb.getItems().addAll(items); 
+        cb.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.changePlayersRequest(cb.getValue());
+            }
+            });
+        Button go = new Button("GO!");
+        go.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToStartGameRequest();
+            }
+
+        });
+        selectPane.getChildren().add(new Label("Number of Players:"));
+        selectPane.getChildren().add(cb);
+        selectPane.getChildren().add(go);
         
+        setupPane.setTop(selectPane);
+        //setup each player pane starting with player 1
+        final Image blackflag = new Image("file:images/flag_black.png");
+        Label flag1 = new Label();
+        flag1.setGraphic(new ImageView(blackflag));
+        pane1.getChildren().add(flag1);
+        
+        final Image yellowflag = new Image("file:images/flag_yellow.png");
+        Label flag2 = new Label();
+        flag2.setGraphic(new ImageView(yellowflag));
+        pane2.getChildren().add(flag2);
+        
+        final Image blueflag = new Image("file:images/flag_blue.png");
+        Label flag3 = new Label();
+        flag3.setGraphic(new ImageView(blueflag));
+        pane3.getChildren().add(flag1);
+        
+        final Image redflag = new Image("file:images/flag_red.png");
+        Label flag4 = new Label();
+        flag4.setGraphic(new ImageView(redflag));
+        pane4.getChildren().add(flag1);
+        
+        final Image greenflag = new Image("file:images/flag_green.png");
+        Label flag5 = new Label();
+        flag5.setGraphic(new ImageView(greenflag));
+        pane5.getChildren().add(flag1);
+        
+        final Image whiteflag = new Image("file:images/flag_white.png");
+        Label flag6 = new Label();
+        flag6.setGraphic(new ImageView(whiteflag));
+        pane6.getChildren().add(flag1);
+        
+        
+        //show 6 player pane
+        for (int i=0; i<2; i++) {
+            playerPane.getColumnConstraints().add(new ColumnConstraints(330));
+            playerPane.getRowConstraints().add(new RowConstraints(180));
+        }
+       
+        playerPane.setAlignment(Pos.CENTER);
+        playerPane.add(pane1, 0, 0);
+        playerPane.add(pane2, 1, 0);
+        //playerPane.add(pane3, 2, 0);
+        //playerPane.add(pane4, 0, 1);
+        //playerPane.add(pane5, 1, 1);
+        //playerPane.add(pane6, 2, 1);
+      //  playerPane.setMargin(pane1, new Insets(5, 10, 5, 10));
+        playerPane.setGridLinesVisible(true);
+        setupPane.setCenter(playerPane);
+        workspace.getChildren().add(setupPane);
     }
 
+    public void setupPlayerGrid(String num) {
+        //change number of player panes shown
+        switch(num) {
+            case "2":
+                pane1.setVisible(true);
+                pane2.setVisible(true);
+                pane3.setVisible(false);
+                pane4.setVisible(false);
+                pane5.setVisible(false);
+                pane6.setVisible(false);
+                break;
+            case "3":
+                pane1.setVisible(true);
+                pane2.setVisible(true);
+                pane3.setVisible(true);
+                pane4.setVisible(false);
+                pane5.setVisible(false);
+                pane6.setVisible(false);
+                break;
+            case "4":
+                pane1.setVisible(true);
+                pane2.setVisible(true);
+                pane3.setVisible(true);
+                pane4.setVisible(true);
+                pane5.setVisible(false);
+                pane6.setVisible(false);
+                break;
+            case "5":
+                pane1.setVisible(true);
+                pane2.setVisible(true);
+                pane3.setVisible(true);
+                pane4.setVisible(true);
+                pane5.setVisible(true);
+                pane6.setVisible(false);
+                break;
+            case "6":
+                pane1.setVisible(true);
+                pane2.setVisible(true);
+                pane3.setVisible(true);
+                pane4.setVisible(true);
+                pane5.setVisible(true);
+                pane6.setVisible(true);
+                break;
+            default:  
+        }
+    }
+    
+    JEditorPane gamePane;
+
+    public void initGameScreen() {
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+
+    }
+
+    /**
+     * This method initializes the history pane controls for use.
+     */
+    private void initHistoryPane() {
+
+    }
+
+    /**
+     * This method initializes the about pane and all of its controls.
+     */
+    public void initAboutPane() {
+        JTEUIState prevState = getCurrentUIState();
+        aboutPane = new JEditorPane();
+        aboutPane.setEditable(false);
+        SwingNode swingNode = new SwingNode();
+        swingNode.setContent(aboutPane);
+        aboutScrollPane = new ScrollPane();
+        aboutScrollPane.setContent(swingNode);
+        aboutPanel = new StackPane();
+        // NOW LOAD THE HELP HTML
+        aboutPane.setContentType("text/html");
+        
+        aboutScrollPane.setFitToHeight(true);
+        aboutScrollPane.setFitToWidth(true);
+
+        //aboutPanel.setCenter(aboutScrollPane);
+        loadPage(aboutPane, JTEPropertyType.ABOUT_FILE_NAME);
+        //mainPane.setCenter(aboutScrollPane);
+        
+        //MAKE BACK BUTTON
+        Button back = new Button("BACK");
+        back.setPadding(marginlessInsets);
+        //back.setT
+        
+        VBox aboutToolbar = new VBox();
+        aboutToolbar.setAlignment(Pos.CENTER);
+        aboutToolbar.getChildren().add(back);
+        aboutToolbar.setStyle("-fx-background-color:white");
+        back.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent event) {
+                // TODO Auto-generated method stub
+                eventHandler.respondToSwitchScreenRequest(prevState);
+            }
+
+        });
+        aboutPanel.getChildren().add(aboutScrollPane);
+        aboutPanel.getChildren().add(aboutToolbar);
+        aboutPanel.setMargin(aboutToolbar, new Insets(250, 0, 0, 0));
+        mainPane.setCenter(aboutPanel);
+        
+        //workspace.getChildren().add(aboutPanel);
+    }
+
+    /**
+     * This method loads the HTML page that corresponds to the fileProperty
+     * argument and puts it into the jep argument for display.
+     *
+     * @param jep The pane that will display the loaded HTML.
+     *
+     * @param fileProperty The file property, whose name can then be retrieved
+     * from the property manager.
+     */
+    public void loadPage(JEditorPane jep, JTEPropertyType fileProperty) {
+        // GET THE FILE NAME
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        String fileName = props.getProperty(fileProperty);
+        try {
+            // LOAD THE HTML INTO THE EDITOR PANE
+            String fileHTML = JTEFileLoader.loadTextFile(fileName);
+            jep.setText(fileHTML);
+            //System.out.println(jep.getText());
+        } catch (IOException ioe) {
+            //errorHandler.processError(JTEPropertyType.INVALID_URL_ERROR_TEXT);
+        }
+    }
 }
