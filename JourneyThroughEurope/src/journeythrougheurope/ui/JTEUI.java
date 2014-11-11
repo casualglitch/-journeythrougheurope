@@ -16,10 +16,6 @@ import journeythrougheurope.file.JTEFileLoader;
 import journeythrougheurope.game.JTEGameData;
 import journeythrougheurope.game.JTEGameStateManager;
 import application.Main.JTEPropertyType;
-import java.awt.BorderLayout;
-import java.awt.Container;
-import java.awt.GridLayout;
-import java.awt.Panel;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
@@ -44,7 +40,6 @@ import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -58,6 +53,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
 
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
@@ -75,16 +71,6 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
-import javax.sound.sampled.AudioSystem;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.plaf.basic.BasicTableUI.KeyHandler;
 
 public class JTEUI extends Pane {
 
@@ -103,6 +89,10 @@ public class JTEUI extends Pane {
         VIEW_FLIGHT_STATE,
     }
 
+    //UIState
+    private JTEUIState currentUIState; 
+    private JTEUIState prevState;
+    
     // mainStage
     private Stage primaryStage;
 
@@ -120,14 +110,6 @@ public class JTEUI extends Pane {
     private ImageView splashGameImageView;
     private Label splashGameImageLabel;
     private VBox menuPane;
-    private ArrayList<Button> menuButtons;
-
-    // EastToolBar
-    private VBox eastToolbar;
-    private Button historyButton;
-    private Button flightButton;
-    private Button aboutButton;
-    private Button saveButton;
 
     // SetupPane
     private GridPane playerPane  = new GridPane();
@@ -139,21 +121,27 @@ public class JTEUI extends Pane {
     private BorderPane pane5 = new BorderPane();
     private BorderPane pane6 = new BorderPane();
     
+    // EastToolBar
+    private VBox eastToolbar;
+    private Button historyButton;
+    private Button flightButton;
+    private Button aboutButton;
+    private Button saveButton;
 
-    // GamePane
-    private Label JTELabel;
+    // GameScreen
+    private Label JTELabel; //?
     private BorderPane gamePane = new BorderPane();
+    private VBox cardPane;
+    private ImageView topLeftMapImageView;
+    private Label topLeftMapImageLabel;
+    private AnchorPane mapPane;
     private GraphicsContext gc;
 
     // Image path
     private String ImgPath = "file:images/";
 
-    // images
-    final Image JTEImage = new Image("file:images/JTE.png");
-    // final Image splashImage = new Image("file:images/splash.gif");
-    final Image gameImage = new Image("file:images/Game.jpg");
-
     //HistoryPane
+    private StackPane historyPanel;
     private ScrollPane historyScrollPane;
     private JEditorPane historyPane;
 
@@ -173,9 +161,6 @@ public class JTEUI extends Pane {
 
     // ANIMATION
     double AnimaLength = 0.5;
-
-    private JTEUIState currentUIState; 
-    private JTEUIState prevState;
     
     public class Position {
 
@@ -279,7 +264,6 @@ public class JTEUI extends Pane {
 
         menuPane = new VBox();
         menuPane.setAlignment(Pos.CENTER);
-        menuButtons = new ArrayList<Button>();
         for (int i = 0; i < menu.size(); i++) {
 
             // GET THE LIST OF MENU OPTIONS
@@ -308,11 +292,10 @@ public class JTEUI extends Pane {
                     }
                 }
             });
-            menuButtons.add(optionButton);
             menuPane.getChildren().add(optionButton);
         }
         splashScreenPane.getChildren().add(menuPane);
-        splashScreenPane.setMargin(menuPane, new Insets(300, 0, 0, 0));
+        splashScreenPane.setMargin(menuPane, new Insets(350, 0, 0, 0));
         System.out.println("in the initSplashScreenPane");
         mainPane.setCenter(splashScreenPane);
         currentUIState = JTEUIState.SPLASH_SCREEN_STATE;
@@ -341,7 +324,7 @@ public class JTEUI extends Pane {
             }
 
         });
-        selectPane.getChildren().add(new Label("Number of Players:"));
+        selectPane.getChildren().add(new Label("  Number of Players:"));
         selectPane.getChildren().add(cb);
         selectPane.getChildren().add(go);
         
@@ -648,6 +631,10 @@ public class JTEUI extends Pane {
         Image img = new Image(ImgPath + imageName);
         return img;
     }
+    
+    public void scaleImage() {
+        
+    }
 
     /**
      * This function selects the UI screen to display based on the uiScreen
@@ -662,21 +649,16 @@ public class JTEUI extends Pane {
                 break;
             case SETUP_SCREEN_STATE:
                 mainPane.setCenter(setupPane);
-                //mainPane.setRight(null);
                 break;
             case PLAY_GAME_STATE:
-                //initGameScreen();
-                //initEastToolbar();
                 mainPane.setCenter(gamePane);
                 break;
             case VIEW_ABOUT_STATE:
                 initAboutPane();
-                
-                System.out.println(getCurrentUIState());
                 mainPane.setCenter(aboutPanel);
                 break;
             case VIEW_HISTORY_STATE:
-                mainPane.setCenter(historyScrollPane);
+                mainPane.setCenter(historyPanel);
                 break;
             case VIEW_FLIGHT_STATE:
                 break;
@@ -685,19 +667,36 @@ public class JTEUI extends Pane {
     }
     public void initGameScreen() {
         currentUIState = JTEUIState.PLAY_GAME_STATE;
-        //mainPane.setCenter(null);
-        //initEastToolbar();
-        
         PropertiesManager props = PropertiesManager.getPropertiesManager();
-        //gamePane //root pane goes into mainpane
+        String topLeftMapImagePath = props.getProperty(JTEPropertyType.TOP_LEFT_MAP_IMG_NAME);
+        
+        //cardPane
         VBox cardPane = new VBox();
+        Label player1 = new Label();
+        cardPane.getChildren().add(player1);
         gamePane.setLeft(cardPane);
-        //gamePane.setCenter(mapPane);
-        VBox eastToolbar = new VBox();
-         eastToolbar.setStyle("-fx-background-color:lightgray");
-         eastToolbar.setAlignment(Pos.CENTER);
-         eastToolbar.setPadding(marginlessInsets);
-         eastToolbar.setSpacing(10.0);
+        
+        //mapPane
+        mapPane = new AnchorPane();
+        Image topLeftMapImage = loadImage(topLeftMapImagePath);
+        topLeftMapImageView = new ImageView(topLeftMapImage);
+        topLeftMapImageView.setFitWidth(topLeftMapImage.getWidth()/4);
+        //topLeftMapImageView.setFitHeight(topLeftMapImage.getHeight()/4);
+        topLeftMapImageView.setPreserveRatio(true);
+        
+        topLeftMapImageLabel = new Label();
+        topLeftMapImageLabel.setGraphic(topLeftMapImageView);
+        //mapPane.getChildren().add(topLeftMapImageLabel);
+        
+        gamePane.setCenter(topLeftMapImageLabel);
+        gamePane.setMargin(topLeftMapImageLabel, new Insets(0,0,0,200));
+        
+        //eastToolbar
+        eastToolbar = new VBox();
+        eastToolbar.setStyle("-fx-background-color:lightgray");
+        eastToolbar.setAlignment(Pos.CENTER);
+        eastToolbar.setPadding(marginlessInsets);
+        eastToolbar.setSpacing(10.0);
 
         // MAKE AND INIT THE FLIGHT BUTTON
         flightButton = initToolbarButton(eastToolbar, JTEPropertyType.FLIGHT_IMG_NAME);
@@ -735,7 +734,7 @@ public class JTEUI extends Pane {
                 eventHandler.respondToSaveGameRequest();
             }
         });
-        // AND NOW PUT THE NORTH TOOLBAR IN THE FRAME
+        // AND NOW PUT THE EAST TOOLBAR IN THE FRAME
         gamePane.setRight(eastToolbar);
         mainPane.setCenter(gamePane);
     }
@@ -745,33 +744,31 @@ public class JTEUI extends Pane {
      */
     private void initHistoryPane() {
         prevState = getCurrentUIState();
-        aboutPane = new JEditorPane();
-        aboutPane.setEditable(false);
+        historyPane = new JEditorPane();
+        historyPane.setEditable(false);
         SwingNode swingNode = new SwingNode();
-        swingNode.setContent(aboutPane);
-        aboutScrollPane = new ScrollPane();
-        aboutScrollPane.setContent(swingNode);
-        aboutPanel = new StackPane();
+        swingNode.setContent(historyPane);
+        historyScrollPane = new ScrollPane();
+        historyScrollPane.setContent(swingNode);
+        historyPanel = new StackPane();
         // NOW LOAD THE HELP HTML
-        aboutPane.setContentType("text/html");
+        historyPane.setContentType("text/html");
         
-        aboutScrollPane.setFitToHeight(true);
-        aboutScrollPane.setFitToWidth(true);
-
-        //aboutPanel.setCenter(aboutScrollPane);
-        loadPage(aboutPane, JTEPropertyType.ABOUT_FILE_NAME);
-        //mainPane.setCenter(aboutScrollPane);
+        historyScrollPane.setFitToHeight(true);
+        historyScrollPane.setFitToWidth(true);
         
-        //MAKE BACK BUTTON
-        Button back = new Button("BACK");
-        back.setPadding(marginlessInsets);
-        //back.setT
+        //TODO: 
+        loadPage(historyPane, JTEPropertyType.HISTORY_FILE_NAME);
         
-        VBox aboutToolbar = new VBox();
-        aboutToolbar.setAlignment(Pos.CENTER);
-        aboutToolbar.getChildren().add(back);
-        aboutToolbar.setStyle("-fx-background-color:white");
-        back.setOnAction(new EventHandler<ActionEvent>() {
+        //MAKE CLOSE BUTTON
+        Button closeButton = new Button("CLOSE");
+        closeButton.setPadding(marginlessInsets);
+        
+        VBox historyToolbar = new VBox();
+        historyToolbar.setAlignment(Pos.CENTER);
+        historyToolbar.getChildren().add(closeButton);
+        historyToolbar.setStyle("-fx-background-color:white");
+        closeButton.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent event) {
@@ -780,10 +777,10 @@ public class JTEUI extends Pane {
             }
 
         });
-        aboutPanel.getChildren().add(aboutScrollPane);
-        aboutPanel.getChildren().add(aboutToolbar);
-        aboutPanel.setMargin(aboutToolbar, new Insets(250, 0, 0, 0));
-        mainPane.setCenter(aboutPanel);
+        historyPanel.getChildren().add(historyScrollPane);
+        historyPanel.getChildren().add(historyToolbar);
+        historyPanel.setMargin(historyToolbar, new Insets(250, 0, 0, 0));
+        mainPane.setCenter(historyPanel);
     }
 
     /**
@@ -811,7 +808,6 @@ public class JTEUI extends Pane {
         //MAKE BACK BUTTON
         Button back = new Button("BACK");
         back.setPadding(marginlessInsets);
-        //back.setT
         
         VBox aboutToolbar = new VBox();
         aboutToolbar.setAlignment(Pos.CENTER);

@@ -62,9 +62,7 @@ public class JTEEventHandler {
      * @throws IOException
      */
     public void respondToSwitchScreenRequest(JTEUI.JTEUIState uiState) {
-            //ui.initJTEUI();
             ui.changeWorkspace(uiState);
-            
     }
 
     /**
@@ -80,7 +78,6 @@ public class JTEEventHandler {
     }
     
     public void respondToStartGameRequest() {
-        //ui.initJTEUI();
         ui.changeWorkspace(JTEUI.JTEUIState.PLAY_GAME_STATE);
         JTEGameStateManager gsm = ui.getGSM();
     }
@@ -96,12 +93,6 @@ public class JTEEventHandler {
 
     public void respondToKeyEvent(KeyEvent t) {
         
-    }
-
-    public void respondToUnDoButtonClick() {
-        if (ui.getGSM().isGameInProgress() == true) {
-            
-        }
     }
 
     void respondToWin(Stage primaryStage) {

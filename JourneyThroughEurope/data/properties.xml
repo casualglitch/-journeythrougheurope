@@ -6,8 +6,8 @@
 <properties>
     <property_list>
         <property name="SPLASH_SCREEN_TITLE_TEXT"   value="JourneyThroughEurope"></property>
-        <property name="WINDOW_WIDTH"               value="1000"></property>
-        <property name="WINDOW_HEIGHT"              value="600"></property>
+        <property name="WINDOW_WIDTH"               value="1083"></property>
+        <property name="WINDOW_HEIGHT"              value="650"></property>
         <property name="SPLASH_SCREEN_IMAGE_NAME"   value="splash.gif"></property>
         <property name="SPLASH_GAME_IMAGE_NAME"   	value="Game.jpg"></property>
         <property name="DATA_PATH"                  value="./data/"></property>
@@ -25,15 +25,23 @@
    		<property name="QUIT_IMG_NAME"           value="quit.png"></property>
    		<property name="HOME_IMG_NAME"           value="home.png"></property>
    		<property name="ABOUT_IMG_NAME"          value="about.png"></property>
+   		
    		<property name="ABOUTJTE_IMG_NAME"       value="aboutjte.png"></property>
    		<property name="HISTORY_IMG_NAME"        value="history.png"></property>
    		<property name="SAVE_IMG_NAME"           value="save.png"></property>
    		<property name="FLIGHT_IMG_NAME"         value="flight.png"></property>
    		
+   		<property name="TOP_LEFT_MAP_IMG_NAME"   value="gameplay_AC14.jpg"></property>
+   		<property name="TOP_RIGHT_MAP_IMG_NAME"   value="gameplay_AC58.jpg"></property>
+   		<property name="BOTTOM_LEFT_MAP_IMG_NAME"   value="gameplay_DF14.jpg"></property>
+   		<property name="BOTTOM_RIGHT_MAP_IMG_NAME"   value="gameplay_DF58.jpg"></property>
+   		
+   		
    		<!-- DATA FILES TO LOAD -->
         <property name="CARD_LIST_FILE_NAME"    value="Cards.txt"></property>
         <property name="CITY_LIST_FILE_NAME"    value="Cities.txt"></property>
         <property name="ABOUT_FILE_NAME"         value="About.html"></property>
+        <property name="HISTORY_FILE_NAME"         value="History.html"></property>
         
         <property name="WORD_LIST_FILE_NAME"    value="EN_FiveLetterWordsList.txt"></property>
         <property name="GAME_FILE_NAME"         value="EN_GameDisplay.html"></property>
