@@ -74,14 +74,14 @@ public class JTEEventHandler {
         JTEGameStateManager gsm = ui.getGSM();
     }
 
-    /*public void respondToSetupRequest() {
+    public void respondToSetupRequest() {
         ui.initJTEUI();
         ui.changeWorkspace(JTEUI.JTEUIState.SETUP_SCREEN_STATE);
-    }*/
+    }
     
     public void respondToStartGameRequest() {
-        ui.initJTEUI();
-        ui.changeWorkspace(JTEUI.JTEUIState.SETUP_SCREEN_STATE);
+        //ui.initJTEUI();
+        ui.changeWorkspace(JTEUI.JTEUIState.PLAY_GAME_STATE);
         JTEGameStateManager gsm = ui.getGSM();
     }
 
@@ -118,5 +118,9 @@ public class JTEEventHandler {
 
     public void changePlayersRequest(String value) {
         ui.setupPlayerGrid(value);
+    }
+
+    void respondToSaveGameRequest() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
