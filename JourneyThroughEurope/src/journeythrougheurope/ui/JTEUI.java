@@ -669,9 +669,10 @@ public class JTEUI extends Pane {
         currentUIState = JTEUIState.PLAY_GAME_STATE;
         PropertiesManager props = PropertiesManager.getPropertiesManager();
         String topLeftMapImagePath = props.getProperty(JTEPropertyType.TOP_LEFT_MAP_IMG_NAME);
+        gamePane.setStyle("-fx-background-color:white");
         
         //cardPane
-        VBox cardPane = new VBox();
+        cardPane = new VBox();
         Label player1 = new Label();
         cardPane.getChildren().add(player1);
         gamePane.setLeft(cardPane);
@@ -681,21 +682,23 @@ public class JTEUI extends Pane {
         Image topLeftMapImage = loadImage(topLeftMapImagePath);
         topLeftMapImageView = new ImageView(topLeftMapImage);
         topLeftMapImageView.setFitWidth(topLeftMapImage.getWidth()/4);
-        //topLeftMapImageView.setFitHeight(topLeftMapImage.getHeight()/4);
         topLeftMapImageView.setPreserveRatio(true);
         
         topLeftMapImageLabel = new Label();
         topLeftMapImageLabel.setGraphic(topLeftMapImageView);
         //mapPane.getChildren().add(topLeftMapImageLabel);
-        
-        gamePane.setCenter(topLeftMapImageLabel);
-        gamePane.setMargin(topLeftMapImageLabel, new Insets(0,0,0,200));
+        mapPane.getChildren().add(topLeftMapImageLabel);
+        AnchorPane.setTopAnchor(topLeftMapImageLabel, 0.0);
+        //gamePane.setCenter(topLeftMapImageLabel);
+        //gamePane.setMargin(topLeftMapImageLabel, new Insets(0,0,0,230));
+        gamePane.setCenter(mapPane);
+        gamePane.setMargin(mapPane, new Insets(0,0,0,230));     
         
         //eastToolbar
         eastToolbar = new VBox();
-        eastToolbar.setStyle("-fx-background-color:lightgray");
+        eastToolbar.setStyle("-fx-background-color:white");
         eastToolbar.setAlignment(Pos.CENTER);
-        eastToolbar.setPadding(marginlessInsets);
+        eastToolbar.setPadding(new Insets(0,30,0,00));
         eastToolbar.setSpacing(10.0);
 
         // MAKE AND INIT THE FLIGHT BUTTON
