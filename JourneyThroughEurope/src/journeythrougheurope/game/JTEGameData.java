@@ -18,63 +18,67 @@ public class JTEGameData {
 
     long playtime = 0;
     public int gameState;
-    int levelState;
-
-    private int gridColumns;
-    private int gridRows;
-    private int grid[][];
-
-    public int getGridColumns() {
-        return gridColumns;
-    }
-
-    public void setGridColumns(int gridColumns) {
-        this.gridColumns = gridColumns;
-    }
-
-    public int getGridRows() {
-        return gridRows;
-    }
-
-    public void setGridRows(int gridRows) {
-        this.gridRows = gridRows;
-    }
-
-    public void setplaytime(long a) {
-        playtime = a;
-    }
-
-    public void setgrid(int g[][]) {
-        this.grid = g;
-    }
-
-    public int[][] getgrid() {
-        return this.grid;
-    }
+    private int playerTurn;
+    private int numTurn;
+    public Player[] players;
+    private int numPlayers;
 
     // THESE ARE USED FOR FORMATTING THE TIME OF GAME
     final long MILLIS_IN_A_SECOND = 1000;
     final long MILLIS_IN_A_MINUTE = 1000 * 60;
     final long MILLIS_IN_AN_HOUR = 1000 * 60 * 60;
     ArrayList<Position> Terminals;
-    String source1 = new File("media/win.mp3").toURI().toString();
-    //String source2 = new File("media/move.wav").toURI().toString();
-    Media media1 = new Media(source1);
-    // Media media2 = new Media(source2);
-    MediaPlayer mediaPlayer1 = new MediaPlayer(media1);
-    //MediaPlayer mediaPlayer2 = new MediaPlayer(media2);
-
     /*
      * Construct this object when a game begins.
      */
-    public JTEGameData(int level) {
+    public JTEGameData(int numberOfPlayers) {
         startTime = new GregorianCalendar();
         endTime = null;
         gameState = 2;// 1 win 0 lost
-        levelState = level;
+        players = new Player[numberOfPlayers];
+        playerTurn = 1;
+        numTurn = 1;
+        numPlayers = numberOfPlayers;
     }
 
     // ACCESSOR METHODS
+    public int getPlayerTurn() {
+        return playerTurn;
+    }
+    
+    public void setPlayerTurn(int playerTurn) {
+        this.playerTurn = playerTurn;
+    }
+
+    public int nextPlayerTurn() {
+        if (playerTurn < numPlayers) {
+            playerTurn++;
+            System.out.println("It is Player " + playerTurn + "'s turn.");
+        }
+        else {
+            playerTurn = 1;
+        }
+        return playerTurn;
+    }
+
+    public int getNumTurn() {
+        return numTurn;
+    }
+
+    public void setNumTurn(int numTurn) {
+        this.numTurn = numTurn;
+    }
+    
+    
+    public Player[] getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(Player[] players) {
+        this.players = players;
+    }
+    
+    
     /**
      * Gets the total time (in milliseconds) that this game took.
      *
@@ -233,22 +237,8 @@ public class JTEGameData {
             if (!isWon()) {
                 CheckGameLost(grid);
             }
-            if (isWon()) {
-                mediaPlayer1.play();
-            } else if (isLost()) {
-                mediaPlayer1.play();
-            } else {
-                String source2 = new File("media/move.wav").toURI().toString();
-                Media media2 = new Media(source2);
-                MediaPlayer mediaPlayer2 = new MediaPlayer(media2);
-                mediaPlayer2.play();
-            }
             return true;
         } else {
-            String source2 = new File("media/hitwall.wav").toURI().toString();
-            Media media2 = new Media(source2);
-            MediaPlayer mediaPlayer2 = new MediaPlayer(media2);
-            mediaPlayer2.play();
             return false;
         }
     }

@@ -32,14 +32,22 @@
    		<property name="FLIGHT_IMG_NAME"         value="flight.png"></property>
    		
    		<property name="TOP_LEFT_MAP_IMG_NAME"   value="gameplay_AC14.jpg"></property>
-   		<property name="TOP_RIGHT_MAP_IMG_NAME"   value="gameplay_AC58.jpg"></property>
-   		<property name="BOTTOM_LEFT_MAP_IMG_NAME"   value="gameplay_DF14.jpg"></property>
+   		<property name="TOP_RIGHT_MAP_IMG_NAME"   value="gameplay_DF14.jpg"></property>
+   		<property name="BOTTOM_LEFT_MAP_IMG_NAME"   value="gameplay_AC58.jpg"></property>
    		<property name="BOTTOM_RIGHT_MAP_IMG_NAME"   value="gameplay_DF58.jpg"></property>
+   		<property name="TOP_LEFT_GRID_IMG_NAME"   value="AC14.png"></property>
+   		<property name="TOP_RIGHT_GRID_IMG_NAME"   value="DF14.png"></property>
+   		<property name="BOTTOM_LEFT_GRID_IMG_NAME"   value="AC58.png"></property>
+   		<property name="BOTTOM_RIGHT_GRID_IMG_NAME"   value="DF58.png"></property>
+   		
+   		
+   		<property name="CIRCLE_IMG_NAME"   		value="circle.png"></property>
    		
    		
    		<!-- DATA FILES TO LOAD -->
         <property name="CARD_LIST_FILE_NAME"    value="Cards.txt"></property>
         <property name="CITY_LIST_FILE_NAME"    value="Cities.txt"></property>
+        <property name="CITY_COORDS_FILE_NAME"  value="cities.cscv"></property>
         <property name="ABOUT_FILE_NAME"         value="About.html"></property>
         <property name="HISTORY_FILE_NAME"         value="History.html"></property>
         

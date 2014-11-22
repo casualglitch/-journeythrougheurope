@@ -2,6 +2,14 @@ package journeythrougheurope.ui;
 
 import application.Main;
 import application.Main.JTEPropertyType;
+import java.awt.Transparency;
+
+import journeythrougheurope.file.JTEFileLoader;
+import journeythrougheurope.game.JTEGameStateManager;
+import journeythrougheurope.game.JTEGameData;
+import journeythrougheurope.game.Card;
+import journeythrougheurope.game.City;
+import journeythrougheurope.game.Player;
 
 import java.io.IOException;
 import java.net.URL;
@@ -11,11 +19,6 @@ import java.util.HashMap;
 import javax.swing.JEditorPane;
 import javax.swing.text.Document;
 import javax.swing.text.html.HTMLDocument;
-
-import journeythrougheurope.file.JTEFileLoader;
-import journeythrougheurope.game.JTEGameData;
-import journeythrougheurope.game.JTEGameStateManager;
-import application.Main.JTEPropertyType;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.ArrayList;
@@ -66,6 +69,8 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -132,8 +137,20 @@ public class JTEUI extends Pane {
     private Label JTELabel; //?
     private BorderPane gamePane = new BorderPane();
     private VBox cardPane;
+    private HBox roundPane;
+    private Image topLeftMapImage;
     private ImageView topLeftMapImageView;
     private Label topLeftMapImageLabel;
+    private Image topRightMapImage;
+    private ImageView topRightMapImageView;
+    private Label topRightMapImageLabel;
+    private Image botLeftMapImage;
+    private ImageView botLeftMapImageView;
+    private Label botLeftMapImageLabel;
+    private Image botRightMapImage;
+    private ImageView botRightMapImageView;
+    private Label botRightMapImageLabel;
+    private StackPane mapPanel;
     private AnchorPane mapPane;
     private GraphicsContext gc;
 
@@ -158,7 +175,13 @@ public class JTEUI extends Pane {
     private JTEEventHandler eventHandler;
     private JTEGameStateManager gsm;
     private JTEFileLoader fileLoader;
+    private JTEGameData gameData;
+    
+    private int numPlayers;
 
+    private HashMap cityCoords = new HashMap();
+    
+    
     // ANIMATION
     double AnimaLength = 0.5;
     
@@ -203,16 +226,20 @@ public class JTEUI extends Pane {
         return gsm;
     }
 
-    //public JTEDocumentManager getDocManager() {
-    //    return docManager;
-    //}
-    
     public JTEUIState getCurrentUIState() {
         return currentUIState;
     }
     
     public JEditorPane getAboutPane() {
         return aboutPane;
+    }
+
+    public int getNumPlayers() {
+        return numPlayers;
+    }
+
+    public void setNumPlayers(int numPlayers) {
+        this.numPlayers = numPlayers;
     }
 
     public void initMainPane() {
@@ -228,6 +255,33 @@ public class JTEUI extends Pane {
         mainPane.setPadding(marginlessInsets);
     }
 
+    /**
+     * This method initializes the language-specific game controls, which
+     * includes the three primary game screens.
+     */
+    public void initJTEUI(){
+        // FIRST REMOVE THE SPLASH SCREEN
+        //mainPane.getChildren().clear();
+        mainPane.setCenter(null);
+
+        // GET THE UPDATED TITLE
+        PropertiesManager props = PropertiesManager.getPropertiesManager();
+        String title = props.getProperty(JTEPropertyType.GAME_TITLE_TEXT);
+        primaryStage.setTitle(title);
+
+
+        // OUR WORKSPACE WILL STORE EITHER THE GAME, STATS,
+        // OR HELP UI AT ANY ONE TIME
+        initWorkspace();
+        initSetupScreen();
+        initGameScreen();
+        initHistoryPane();
+        initAboutPane();
+
+        // WE'LL START OUT WITH THE GAME SCREEN
+        //changeWorkspace(JTEUIState.PLAY_GAME_STATE);
+    }
+    
     public void initSplashScreen() throws IOException {
         // INIT THE SPLASH SCREEN CONTROLS
         PropertiesManager props = PropertiesManager.getPropertiesManager();
@@ -320,7 +374,9 @@ public class JTEUI extends Pane {
         go.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
-                eventHandler.respondToStartGameRequest();
+                eventHandler.respondToStartGameRequest(Integer.parseInt(cb.getValue()));
+                numPlayers = Integer.parseInt(cb.getValue());
+                System.out.println("Number of Players: " + numPlayers);
             }
 
         });
@@ -550,34 +606,204 @@ public class JTEUI extends Pane {
             default:  
         }
     }
-
-    /**
-     * This method initializes the language-specific game controls, which
-     * includes the three primary game screens.
-     */
-    public void initJTEUI(){
-        // FIRST REMOVE THE SPLASH SCREEN
-        //mainPane.getChildren().clear();
-        mainPane.setCenter(null);
-
-        // GET THE UPDATED TITLE
+            
+    public void initGameScreen() {
+        currentUIState = JTEUIState.PLAY_GAME_STATE;
         PropertiesManager props = PropertiesManager.getPropertiesManager();
-        String title = props.getProperty(JTEPropertyType.GAME_TITLE_TEXT);
-        primaryStage.setTitle(title);
+        String topLeftMapImagePath = props.getProperty(JTEPropertyType.TOP_LEFT_MAP_IMG_NAME);
+        String topRightMapImagePath = props.getProperty(JTEPropertyType.TOP_RIGHT_MAP_IMG_NAME);
+        String botLeftMapImagePath = props.getProperty(JTEPropertyType.BOTTOM_LEFT_MAP_IMG_NAME);
+        String botRightMapImagePath = props.getProperty(JTEPropertyType.BOTTOM_RIGHT_MAP_IMG_NAME);
+        gamePane.setStyle("-fx-background-color:white");
+        //playerPane
+        //roundPane
+        roundPane = new HBox();
+        roundPane.setSpacing(10.0);
+        //for (int i=numPlayers; i>0; i--) {
+            Label playerLabel = new Label(" Player" + 1);
+            playerLabel.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+            roundPane.getChildren().add(playerLabel);
+            //if (i != 1) { 
+               // playerLabel.setVisible(false);            }
+        //}
+        Button end = new Button("End Turn");
+        end.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToEndRoundRequest();
+                System.out.println("Player" + gameData.getPlayerTurn() + "'s turn ended.");
+            }
+        });
+        roundPane.getChildren().add(end);
+        //card(player)Pane
+        cardPane = new VBox();
+        cardPane.getChildren().add(roundPane);
+        gamePane.setLeft(cardPane);
+        
+        //mapPane
+        mapPanel = new StackPane();
+        mapPane = new AnchorPane();
+        mapPanel.getChildren().add(mapPane);
+        topLeftMapImage = loadImage(topLeftMapImagePath);
+        topLeftMapImageView = new ImageView(topLeftMapImage);
+        topLeftMapImageView.setFitWidth(topLeftMapImage.getWidth()/4);
+        topLeftMapImageView.setPreserveRatio(true);
+        topLeftMapImageLabel = new Label();
+        topLeftMapImageLabel.setGraphic(topLeftMapImageView);//
+        topRightMapImage = loadImage(topRightMapImagePath);
+        topRightMapImageView = new ImageView(topRightMapImage);
+        topRightMapImageView.setFitWidth(topRightMapImage.getWidth()/4);
+        topRightMapImageView.setPreserveRatio(true);
+        topRightMapImageLabel = new Label();
+        topRightMapImageLabel.setGraphic(topRightMapImageView);//
+        botLeftMapImage = loadImage(botLeftMapImagePath);
+        botLeftMapImageView = new ImageView(botLeftMapImage);
+        botLeftMapImageView.setFitWidth(botLeftMapImage.getWidth()/4);
+        botLeftMapImageView.setPreserveRatio(true);
+        botLeftMapImageLabel = new Label();
+        botLeftMapImageLabel.setGraphic(botLeftMapImageView);//
+        botRightMapImage = loadImage(botRightMapImagePath);
+        botRightMapImageView = new ImageView(botRightMapImage);
+        botRightMapImageView.setFitWidth(botRightMapImage.getWidth()/4);
+        botRightMapImageView.setPreserveRatio(true);
+        botRightMapImageLabel = new Label();
+        botRightMapImageLabel.setGraphic(botRightMapImageView);//
+        
+        //set default top left map
+        //AnchorPane.setTopAnchor(topLeftMapImageLabel, 0.0);
+        //make array of city buttons
+        Button aberdeen = new Button("ABERDEEN");
+        //Circle circle = new Circle(20,Color.RED);
+        //aberdeen.setShape(circle);
+        aberdeen.setTooltip(new Tooltip("Aberdeen"));//card.getPlace()));
+        ArrayList<Button> cities = new ArrayList<>();
+        cities.add(aberdeen);
+        //add all city buttons
+        mapPane.getChildren().add(aberdeen);
+        AnchorPane.setBottomAnchor(aberdeen,483.0);
+        AnchorPane.setLeftAnchor(aberdeen, 273.25);
+                
+        mapPanel.getChildren().add(topLeftMapImageLabel);
+        //mapPanel.getChildren().add(botLeftMapImageLabel);
+        //mapPanel.getChildren().add(topRightMapImageLabel);
+        //mapPanel.getChildren().add(botRightMapImageLabel);
+        
+        //gamePane.setCenter(topLeftMapImageLabel);
+        //gamePane.setMargin(topLeftMapImageLabel, new Insets(0,0,0,230));
+        gamePane.setCenter(mapPanel);
+        gamePane.setMargin(mapPanel, new Insets(0,0,0,115));     
+        
+        //eastToolbar
+        eastToolbar = new VBox();
+        eastToolbar.setStyle("-fx-background-color:white");
+        eastToolbar.setAlignment(Pos.CENTER);
+        eastToolbar.setPadding(new Insets(0,30,0,00));
+        eastToolbar.setSpacing(5.0);
 
+        //gridselectorpane
+        GridPane gridSelector = new GridPane();
+        gridSelector.setAlignment(Pos.CENTER);
+        Image topLeftImg = loadImage(props.getProperty(JTEPropertyType.TOP_LEFT_GRID_IMG_NAME));
+        ImageView topLeftImgView = new ImageView(topLeftImg);
+        Button topLeft = new Button(); 
+        topLeft.setGraphic(topLeftImgView);
+        Text acLabel = new Text("A-C");
+        acLabel.setFont(Font.font("Tahoma", FontWeight.BOLD, 18));
+        gridSelector.add(acLabel, 1, 0);
+        gridSelector.add(topLeft, 1, 1); //
+        Image topRightImg = loadImage(props.getProperty(JTEPropertyType.TOP_RIGHT_GRID_IMG_NAME));
+        ImageView topRightImgView = new ImageView(topRightImg);
+        Button topRight = new Button(); 
+        topRight.setGraphic(topRightImgView);
+        Text dfLabel = new Text("D-F");
+        dfLabel.setFont(Font.font("Tahoma", FontWeight.BOLD, 18));
+        gridSelector.add(dfLabel, 2, 0);
+        gridSelector.add(topRight, 2, 1); //
+        Image botLeftImg = loadImage(props.getProperty(JTEPropertyType.BOTTOM_LEFT_GRID_IMG_NAME));
+        ImageView botLeftImgView = new ImageView(botLeftImg);
+        Button botLeft = new Button(); 
+        botLeft.setGraphic(botLeftImgView);
+        Text label14 = new Text("1-4");
+        label14.setFont(Font.font("Tahoma", FontWeight.BOLD, 18));
+        gridSelector.add(label14, 0, 1);
+        gridSelector.add(botLeft, 1, 2); //
+        Image botRightImg = loadImage(props.getProperty(JTEPropertyType.BOTTOM_RIGHT_GRID_IMG_NAME));
+        ImageView botRightImgView = new ImageView(botRightImg);
+        Button botRight = new Button(); 
+        botRight.setGraphic(botRightImgView);
+        Text label58 = new Text("5-8");
+        label58.setFont(Font.font("Tahoma", FontWeight.BOLD, 18));
+        gridSelector.add(label58, 0, 2);
+        gridSelector.add(botRight, 2, 2); //
+        eastToolbar.getChildren().add(gridSelector);
+        topLeft.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchMapRequest("topLeft");
+            }
+        });
+        topRight.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchMapRequest("topRight");
+            }
+        });
+        
+        botLeft.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchMapRequest("botLeft");
+            }
+        });
+        botRight.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchMapRequest("botRight");
+            }
+        });
+        
+        // MAKE AND INIT THE FLIGHT BUTTON
+        flightButton = initToolbarButton(eastToolbar, JTEPropertyType.FLIGHT_IMG_NAME);
+        flightButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_FLIGHT_STATE);
+            }
+        });
+        // MAKE AND INIT THE GAME HISTORY BUTTON
+        historyButton = initToolbarButton(eastToolbar, JTEPropertyType.HISTORY_IMG_NAME);
+        historyButton.setOnAction(new EventHandler<ActionEvent>() {
 
-        // OUR WORKSPACE WILL STORE EITHER THE GAME, STATS,
-        // OR HELP UI AT ANY ONE TIME
-        initWorkspace();
-        initSetupScreen();
-        initGameScreen();
-        initHistoryPane();
-        initAboutPane();
-
-        // WE'LL START OUT WITH THE GAME SCREEN
-        //changeWorkspace(JTEUIState.PLAY_GAME_STATE);
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_HISTORY_STATE);
+            }
+        });
+        // MAKE AND INIT THE ABOUT BUTTON
+        aboutButton = initToolbarButton(eastToolbar, JTEPropertyType.ABOUTJTE_IMG_NAME);
+        aboutButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_ABOUT_STATE);
+            }
+        });
+        // MAKE AND INIT THE SAVE BUTTON
+        saveButton = initToolbarButton(eastToolbar, JTEPropertyType.SAVE_IMG_NAME);
+        saveButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                eventHandler.respondToSaveGameRequest();
+            }
+        });
+        // AND NOW PUT THE EAST TOOLBAR IN THE FRAME
+        gamePane.setRight(eastToolbar);
+        mainPane.setCenter(gamePane);
     }
-
+    
+    public BorderPane getGamePane() {
+        return this.gamePane;
+    }
+    
     /**
      * This function initializes all the controls that go in the north toolbar.
      */
@@ -665,81 +891,32 @@ public class JTEUI extends Pane {
             default:
         }
     }
-    public void initGameScreen() {
-        currentUIState = JTEUIState.PLAY_GAME_STATE;
-        PropertiesManager props = PropertiesManager.getPropertiesManager();
-        String topLeftMapImagePath = props.getProperty(JTEPropertyType.TOP_LEFT_MAP_IMG_NAME);
-        gamePane.setStyle("-fx-background-color:white");
-        
-        //cardPane
-        cardPane = new VBox();
-        Label player1 = new Label();
-        cardPane.getChildren().add(player1);
-        gamePane.setLeft(cardPane);
-        
-        //mapPane
-        mapPane = new AnchorPane();
-        Image topLeftMapImage = loadImage(topLeftMapImagePath);
-        topLeftMapImageView = new ImageView(topLeftMapImage);
-        topLeftMapImageView.setFitWidth(topLeftMapImage.getWidth()/4);
-        topLeftMapImageView.setPreserveRatio(true);
-        
-        topLeftMapImageLabel = new Label();
-        topLeftMapImageLabel.setGraphic(topLeftMapImageView);
-        //mapPane.getChildren().add(topLeftMapImageLabel);
-        mapPane.getChildren().add(topLeftMapImageLabel);
-        AnchorPane.setTopAnchor(topLeftMapImageLabel, 0.0);
-        //gamePane.setCenter(topLeftMapImageLabel);
-        //gamePane.setMargin(topLeftMapImageLabel, new Insets(0,0,0,230));
-        gamePane.setCenter(mapPane);
-        gamePane.setMargin(mapPane, new Insets(0,0,0,230));     
-        
-        //eastToolbar
-        eastToolbar = new VBox();
-        eastToolbar.setStyle("-fx-background-color:white");
-        eastToolbar.setAlignment(Pos.CENTER);
-        eastToolbar.setPadding(new Insets(0,30,0,00));
-        eastToolbar.setSpacing(10.0);
-
-        // MAKE AND INIT THE FLIGHT BUTTON
-        flightButton = initToolbarButton(eastToolbar, JTEPropertyType.FLIGHT_IMG_NAME);
-        flightButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_FLIGHT_STATE);
-            }
-        });
-        
-        // MAKE AND INIT THE GAME HISTORY BUTTON
-        historyButton = initToolbarButton(eastToolbar, JTEPropertyType.HISTORY_IMG_NAME);
-        historyButton.setOnAction(new EventHandler<ActionEvent>() {
-
-            @Override
-            public void handle(ActionEvent event) {
-                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_HISTORY_STATE);
-            }
-        });
-
-        // MAKE AND INIT THE ABOUT BUTTON
-        aboutButton = initToolbarButton(eastToolbar, JTEPropertyType.ABOUTJTE_IMG_NAME);
-        aboutButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                eventHandler.respondToSwitchScreenRequest(JTEUIState.VIEW_ABOUT_STATE);
-            }
-        });
-        
-        // MAKE AND INIT THE SAVE BUTTON
-        saveButton = initToolbarButton(eastToolbar, JTEPropertyType.SAVE_IMG_NAME);
-        saveButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                eventHandler.respondToSaveGameRequest();
-            }
-        });
-        // AND NOW PUT THE EAST TOOLBAR IN THE FRAME
-        gamePane.setRight(eastToolbar);
-        mainPane.setCenter(gamePane);
+    
+    
+    public void changeMapScreen(String loc) {
+        switch (loc) {
+            case "topLeft":
+                mapPanel.getChildren().clear();
+                mapPanel.getChildren().add(topLeftMapImageLabel);
+                //AnchorPane.setTopAnchor(topLeftMapImageLabel, 0.0);
+                break;
+            case "topRight":
+                mapPanel.getChildren().clear();
+                mapPanel.getChildren().add(topRightMapImageLabel);
+                //AnchorPane.setTopAnchor(topRightMapImageLabel, 0.0);
+                break;
+            case "botLeft":
+                mapPanel.getChildren().clear();
+                mapPanel.getChildren().add(botLeftMapImageLabel);
+                //AnchorPane.setTopAnchor(botLeftMapImageLabel, 0.0);
+                break;
+            case "botRight":
+                mapPanel.getChildren().clear();
+                mapPanel.getChildren().add(botRightMapImageLabel);
+                //AnchorPane.setTopAnchor(botRightMapImageLabel, 0.0);
+                break;
+            default:
+        }
     }
 
     /**
@@ -853,5 +1030,16 @@ public class JTEUI extends Pane {
         } catch (IOException ioe) {
             //errorHandler.processError(JTEPropertyType.INVALID_URL_ERROR_TEXT);
         }
+    }
+
+    public ArrayList<int[][]> topLeftCities() {
+        ArrayList<int[][]> coords = new ArrayList<>();
+        Button city = new Button();
+        //city.setTooltip(new Tooltip(card.getPlace()));
+        //Circle circle = new Circle(CITY.getWidth() / 2);
+        Circle circle = new Circle(2.0);
+        city.setShape(circle);
+        //cities.add(city);
+        return coords;
     }
 }

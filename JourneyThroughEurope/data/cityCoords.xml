@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coordinates>
+	<city>
+		<name>ABERDEEN</name>
+		<color>red</color>
+		<quarter>1</quarter>
+		<x>1093</x>
+		<y>1932</y>
+	</city>
+	<city>
+		<name>ARHUS</name>
+		<color>red</color>
+		<quarter>1</quarter>
+		<x>1985</x>
+		<y>2124</y>
+	</city>
+	<city>
+		<name>BELFAST</name>
+		<color>red</color>
+		<quarter>1</quarter>
+		<x>765</x>
+		<y>2190</y>
+	</city>
+	<city>
+		<name>ABERDEEN</name>
+		<color>red</color>
+		<quarter>1</quarter>
+		<x>1093</x>
+		<y>1932</y>
+	</city>
+
+</coordinates>

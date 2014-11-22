@@ -31,10 +31,12 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import journeythrougheurope.game.JTEGameData;
 
 public class JTEEventHandler {
 
     private JTEUI ui;
+    private JTEGameData gameData;
     private Stack<int[][]> MoveRecorder;
     private Timeline timeline;
     public long timefinal;
@@ -77,9 +79,10 @@ public class JTEEventHandler {
         ui.changeWorkspace(JTEUI.JTEUIState.SETUP_SCREEN_STATE);
     }
     
-    public void respondToStartGameRequest() {
+    public void respondToStartGameRequest(int numPlayers) {
         ui.changeWorkspace(JTEUI.JTEUIState.PLAY_GAME_STATE);
         JTEGameStateManager gsm = ui.getGSM();
+        gameData = new JTEGameData(numPlayers); //create array of players in gamedata
     }
 
     /**
@@ -112,6 +115,16 @@ public class JTEEventHandler {
     }
 
     void respondToSaveGameRequest() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        ui.changeWorkspace(JTEUI.JTEUIState.SETUP_SCREEN_STATE);
+    }
+
+    void respondToEndRoundRequest() {
+        int playerTurn = gameData.nextPlayerTurn();
+        //ui.getGamePane().setLeft(ui.);
+        //ui.initPlayerPane();
+    }
+
+    void respondToSwitchMapRequest(String loc) {
+        ui.changeMapScreen(loc);
     }
 }

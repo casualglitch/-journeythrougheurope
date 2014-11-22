@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package journeythrougheurope.ui;
+package journeythrougheurope.game;
 
 /**
  *
  * @author Husky
  */
-class RadioGroup {
+public class Player {
     
 }
